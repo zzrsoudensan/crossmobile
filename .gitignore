@@ -1,0 +1,13 @@
+/xmlvm/
+/mine/
+/support/
+
+/.hg/
+/.hgignore
+/.hgtags
+
+/build/
+/dist/
+.DS_Store
+
+private
