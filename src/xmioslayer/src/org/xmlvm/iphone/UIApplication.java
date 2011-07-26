@@ -136,7 +136,7 @@ public class UIApplication extends UIResponder {
             if (instance.getKeyWindow() != null)
                 instance.getKeyWindow().doLayoutWithDelegates();
         } catch (Throwable e) {
-            throw new RuntimeException("Unable to launch iPhone application", e);
+            throw new RuntimeException("Unable to launch CrossMobile application", e);
         }
     }
 

@@ -69,7 +69,7 @@ public class UIDevice extends NSObject {
     }
 
     public String getName() {
-        return "Android iPhone Simulator";
+        return "Android CrossMobile";
     }
 
     public String getSystemName() {

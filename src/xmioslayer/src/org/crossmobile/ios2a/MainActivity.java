@@ -53,7 +53,7 @@ public abstract class MainActivity extends ActivityGroup {
         // Find iphone main class name
         final String classname = getMainClass();
         if (classname == null) {
-            LifeCycle.finishWithError("Not a valid iPhone application, missing main class definition", null);
+            LifeCycle.finishWithError("Not a valid CrossMobile application, missing main class definition", null);
             return;
         }
 
@@ -65,7 +65,7 @@ public abstract class MainActivity extends ActivityGroup {
             if (main == null)
                 throw new IllegalArgumentException("Class " + classname + " does not support method with signature 'public static void main(String[])'");
         } catch (Exception ex) {
-            LifeCycle.finishWithError("Unable to find iPhone application " + classname, ex);
+            LifeCycle.finishWithError("Unable to find CrossMobile application " + classname, ex);
             return;
         }
 
@@ -73,7 +73,7 @@ public abstract class MainActivity extends ActivityGroup {
         try {
             main.invoke(null, new Object[]{args});
         } catch (Exception ex) {
-            LifeCycle.finishWithError("Unable to initialize iPhone application " + classname, ex);
+            LifeCycle.finishWithError("Unable to initialize CrossMobile application " + classname, ex);
             return;
         }
     }

@@ -31,7 +31,7 @@ public abstract class SplashActivity extends Activity {
         try {
             System.getProperties().load(FileBridge.getInputFileStream(FileBridge.BUNDLEPREFIX + "/ios.properties"));
         } catch (Exception ex) {
-            LifeCycle.finishWithError("Not a valid iPhone application, missing ios.properties file", ex);
+            LifeCycle.finishWithError("Not a valid CrossMobile application, missing ios.properties file", ex);
             return;
         }
     }
