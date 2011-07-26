@@ -16,6 +16,7 @@
  */
 package org.crossmobile.ios2a;
 
+import android.R;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
@@ -68,6 +69,7 @@ public abstract class SplashActivity extends Activity {
     protected void onPause() {
         super.onPause();
         startActivity(new Intent(getMainActivity()));
+        overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
     }
 
     protected abstract int getSplashResource();
