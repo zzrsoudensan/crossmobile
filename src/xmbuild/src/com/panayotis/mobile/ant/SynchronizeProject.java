@@ -32,6 +32,7 @@ public class SynchronizeProject extends Task {
     private File asset;
     private String iosresources;
     private boolean ignore = false;
+    private boolean debuggable = false;
 
     public void setMainClass(String mainclass) {
         this.mainclass = mainclass;
@@ -81,6 +82,10 @@ public class SynchronizeProject extends Task {
         this.ignore = ignore;
     }
 
+    public void setDebuggable(boolean debuggable) {
+        this.debuggable = debuggable;
+    }
+
     @Override
     public void execute() throws BuildException {
         if (ignore)
@@ -108,7 +113,7 @@ public class SynchronizeProject extends Task {
         AndroidUtils autils = new AndroidUtils(this);
 
         autils.createActivities(packname, classname);
-        autils.updateAndroidManifest(packname, classname);
+        autils.updateAndroidManifest(packname, classname, debuggable);
         autils.createAssets(futils.getResourceList(), asset);
         futils.copySelfResources();
         futils.copyImage("Icon", Templates.ICONDRAWABLE);

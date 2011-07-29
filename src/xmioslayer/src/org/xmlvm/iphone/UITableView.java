@@ -46,7 +46,7 @@ public class UITableView extends UIScrollView {
     public UITableView(CGRect rect, int UITableViewStyle) {
         super(rect);
         adapter = new IOSTableAdapter(this);
-        ((ListView) __model()).setOnItemClickListener(new OnItemClickListener() {
+        ((ListView) xm_model()).setOnItemClickListener(new OnItemClickListener() {
 
             public void onItemClick(AdapterView<?> av, View view, int position, long id) {
                 delegate.didSelectRowAtIndexPath(UITableView.this, new NSIndexPath(1, position));
@@ -92,7 +92,7 @@ public class UITableView extends UIScrollView {
 
             @Override
             public void exec() {
-                ((ListView) __model()).setAdapter(adapter);
+                ((ListView) xm_model()).setAdapter(adapter);
             }
         });
     }
@@ -111,11 +111,11 @@ public class UITableView extends UIScrollView {
 
     public void setSeparatorColor(UIColor separatorColor) {
         this.separatorColor = separatorColor;
-        ((ListView) __model()).setDivider(new ColorDrawable(separatorColor.getModelColor()));
+        ((ListView) xm_model()).setDivider(new ColorDrawable(separatorColor.getModelColor()));
     }
 
     public int getSeparatorStyle() {
-        if (((ListView) __model()).getDividerHeight() > 0)
+        if (((ListView) xm_model()).getDividerHeight() > 0)
             return UITableViewCellSeparatorStyle.SingleLine;
         else
             return UITableViewCellSeparatorStyle.None;
@@ -123,7 +123,7 @@ public class UITableView extends UIScrollView {
 
     public void setSeparatorStyle(int UITableViewCellSeparatorStyle) {
         int height = UITableViewCellSeparatorStyle == org.xmlvm.iphone.UITableViewCellSeparatorStyle.None ? 0 : 1;
-        ((ListView) __model()).setDividerHeight(height);
+        ((ListView) xm_model()).setDividerHeight(height);
     }
 
     public boolean isAllowsSelection() {

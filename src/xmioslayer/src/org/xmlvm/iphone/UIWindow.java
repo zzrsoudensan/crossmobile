@@ -16,11 +16,16 @@
  */
 package org.xmlvm.iphone;
 
+import android.app.Activity;
+import android.view.MotionEvent;
+import org.crossmobile.ios2a.IOSView;
+import org.crossmobile.ios2a.ImplementationError;
 import org.crossmobile.ios2a.MainActivity;
 
 public class UIWindow extends UIView {
 
     private UIViewController rootViewController;
+    private xmEventDispatcher dispatcher = new xmEventDispatcher(this);
 
     public UIWindow() {
         this(CGRect.Zero());
@@ -37,6 +42,16 @@ public class UIWindow extends UIView {
         super.addSubview(subView);
     }
 
+    @Override
+    public CGRect getFrame() {
+        return UIScreen.mainScreen().getBounds();
+    }
+
+    @Override
+    public UIWindow getWindow() {
+        return this;
+    }
+
     public void setRootViewController(UIViewController controller) {
         for (UIView child : getSubviews())
             child.removeFromSuperview();
@@ -48,27 +63,23 @@ public class UIWindow extends UIView {
     }
 
     public CGPoint convertPointToWindow(CGPoint point, UIWindow window) {
-        // TODO : Java implementation
-        return null;
+        throw new ImplementationError();
     }
 
     public CGPoint convertPointFromWindow(CGPoint point, UIWindow window) {
-        // TODO : Java implementation
-        return null;
+        throw new ImplementationError();
     }
 
     public CGRect convertRectToWindow(CGRect point, UIWindow window) {
-        // TODO : Java implementation
-        return null;
+        throw new ImplementationError();
     }
 
     public CGRect convertRectFromWindow(CGRect point, UIWindow window) {
-        // TODO : Java implementation
-        return null;
+        throw new ImplementationError();
     }
 
     public void sendEvent(UIEvent event) {
-        // TODO : Java implementation
+        dispatcher.send(event);
     }
 
     public void makeKeyAndVisible() {
@@ -125,12 +136,24 @@ public class UIWindow extends UIView {
             rootViewController.doLayoutWithDelegates(false);
             rootViewController.viewWillAppear(false);
         }
-        MainActivity.current.setContentView(__base());
+        MainActivity.current.setContentView(xm_base());
         if (rootViewController != null)
             rootViewController.viewDidAppear(false);
     }
 
     void updateStatusBarDelta() {
-        __base().updateStatusBarDelta();
+        xm_base().updateStatusBarDelta();
+    }
+
+    @Override
+    IOSView createBaseObject(Activity activity) {
+        return new IOSView(activity) {
+
+            @Override
+            public boolean dispatchTouchEvent(MotionEvent ev) {
+                dispatcher.send(ev);
+                return super.dispatchTouchEvent(ev);   // For other native widgets to work
+            }
+        };
     }
 }

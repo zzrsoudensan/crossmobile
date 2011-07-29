@@ -115,7 +115,7 @@ public class UINavigationBar extends UIView {
         this.tintColor = new UIColor(color);
         if (translucent)
             color &= 0xE0FFFFFF;
-        __base().setBackgroundDrawable(new GraphicsUtils.TintedDrawable(color));
+        xm_base().setBackgroundDrawable(new GraphicsUtils.TintedDrawable(color));
     }
 
     public boolean isTranslucent() {

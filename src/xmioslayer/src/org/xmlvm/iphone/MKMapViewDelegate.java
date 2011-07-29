@@ -57,7 +57,7 @@ public class MKMapViewDelegate extends NSObject {
     public void calloutAccessoryControlTapped(MKMapView mapView, MKAnnotationView annotationView, UIControl control) {
     }
 
-    public void didChangeDragStatefromOldState(MKMapView mapView, MKAnnotationView annotationView, int mkAnnotationViewDragStateNew, int mkAnnotationViewDragStateOld) {
+    public void didChangeDragStatefromOldState(MKMapView mapView, MKAnnotationView annotationView, int MKAnnotationViewDragStateNew, int MKAnnotationViewDragStateOld) {
     }
 
     public void didSelectAnnotationView(MKMapView mapView, MKAnnotationView annotationView) {

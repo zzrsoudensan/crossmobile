@@ -66,11 +66,17 @@ public abstract class UIResponder extends NSObject {
         return true;
     }
 
-    public final View __model() {
+    /**
+     * @hide
+     */
+    public final View xm_model() {
         return model;
     }
 
-    public final IOSView __base() {
+    /**
+     * @hide
+     */
+    public final IOSView xm_base() {
         return base;
     }
 

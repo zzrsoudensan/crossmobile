@@ -20,7 +20,7 @@ import android.graphics.drawable.BitmapDrawable;
 import org.crossmobile.ios2a.GraphicsUtils;
 import static org.xmlvm.iphone.UIControlState.*;
 
-class ButtonStates {
+class xmButtonStates {
 
     private static final int NormalIdx = 0;
     private static final int SelectedIdx = 1;
@@ -29,9 +29,9 @@ class ButtonStates {
     //
     private final State[] states;
     private int current = 0;
-    public boolean adjustsImageWhenHighlighted = true;
-    public boolean adjustsImageWhenDisabled = true;
-    public boolean showsTouchWhenHighlighted = true;
+    boolean adjustsImageWhenHighlighted = true;
+    boolean adjustsImageWhenDisabled = true;
+    boolean showsTouchWhenHighlighted = true;
 
     {
         states = new State[4];

@@ -18,22 +18,9 @@ package org.crossmobile.ios2a.transf;
 
 import android.graphics.Matrix;
 import android.view.animation.Transformation;
-import java.lang.reflect.Field;
 import org.xmlvm.iphone.CGAffineTransform;
 
 public class RichTransformation extends Transformation {
-
-    private static final Field matrixF;
-
-    static {
-        Field fm = null;
-        try {
-            fm = CGAffineTransform.class.getDeclaredField("matrix");
-            fm.setAccessible(true);
-        } catch (Exception ex) {
-        }
-        matrixF = fm;
-    }
 
     public static RichTransformation setAlpha(RichTransformation old, float alpha) {
         if (alpha < 0)
@@ -60,7 +47,7 @@ public class RichTransformation extends Transformation {
         if (cgtrans == null)
             newmatrix = new Matrix();
         else
-            newmatrix = new Matrix(getMatrix(cgtrans));
+            newmatrix = cgtrans.xm_matrixclone();
         if (newmatrix.isIdentity())
             if (old == null)
                 return null;
@@ -78,28 +65,11 @@ public class RichTransformation extends Transformation {
         }
     }
 
-    public static RichTransformation setParameters(Parameters params) {
-        return setAlpha(null, params.getAlpha());
+    public static RichTransformation setParameters(IOSAnimation params) {
+        return setTransform(setAlpha(null, params.getAlpha()), params.getTransform());
     }
 
     public CGAffineTransform getTransformation() {
-        CGAffineTransform transf = CGAffineTransform.identity();
-        setMatrix(transf, mMatrix);
-        return transf;
-    }
-
-    private static void setMatrix(CGAffineTransform transf, Matrix m) {
-        try {
-            matrixF.set(transf, m);
-        } catch (Exception e) {
-        }
-    }
-
-    private static Matrix getMatrix(CGAffineTransform transf) {
-        try {
-            return (Matrix) matrixF.get(transf);
-        } catch (Exception e) {
-            return null;
-        }
+        return CGAffineTransform.xm_new(mMatrix);
     }
 }

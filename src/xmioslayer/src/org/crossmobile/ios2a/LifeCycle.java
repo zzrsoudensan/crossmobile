@@ -72,7 +72,7 @@ public class LifeCycle {
             }
     }
 
-    public static void finishWithError(final String error, final Exception exception) {
+    public static void finishWithError(final String error, final Throwable throwable) {
         final Activity activity = MainActivity.current;
         activity.runOnUiThread(new Runnable() {
 
@@ -81,8 +81,8 @@ public class LifeCycle {
                     NSLog.log(error);
                     Toast.makeText(activity, error, Toast.LENGTH_LONG).show();
                 }
-                if (exception != null)
-                    NSLog.log(exception);
+                if (throwable != null)
+                    NSLog.log(throwable);
                 activity.finish();
             }
         });

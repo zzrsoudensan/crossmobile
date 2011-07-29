@@ -31,7 +31,7 @@ public class UIActivityIndicatorView extends UIView {
 
     @SuppressWarnings("OverridableMethodCallInConstructor")
     public UIActivityIndicatorView(int UIActivityIndicatorViewStyle) {
-        ProgressBar bar = (ProgressBar) __model();
+        ProgressBar bar = (ProgressBar) xm_model();
         bar.setIndeterminate(true);
         setActivityIndicatorViewStyle(UIActivityIndicatorViewStyle);
     }

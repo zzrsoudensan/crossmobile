@@ -23,16 +23,19 @@ public abstract class UIRunner implements Runnable {
     public static void runSynced(UIRunner runner) {
         synchronized (runner) {
             try {
-                MainActivity.current.runOnUiThread(runner);
-                if (!runner.didRun())
-                    runner.wait();
+                if (MainActivity.current != null) { // Run only if still active
+                    MainActivity.current.runOnUiThread(runner);
+                    if (!runner.didRun())
+                        runner.wait();
+                }
             } catch (InterruptedException ex) {
             }
         }
     }
 
     public static void runFree(UIRunner runner) {
-        MainActivity.current.runOnUiThread(runner);
+        if (MainActivity.current != null) // Run only if still active
+            MainActivity.current.runOnUiThread(runner);
     }
 
     @Override

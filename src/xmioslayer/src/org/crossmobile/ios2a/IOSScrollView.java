@@ -408,8 +408,8 @@ public class IOSScrollView extends IOSView {
             case MotionEvent.ACTION_UP:
                 if (pagingEnabled) {
                     CGRect pageframe = ((IOSView.LayoutParams) getLayoutParams()).getFrame();
-                    float xscroll = xAndroid(getScrollX());
-                    float yscroll = yAndroid(getScrollY());
+                    float xscroll = x2IOS(getScrollX());
+                    float yscroll = y2IOS(getScrollY());
 
                     // find page number
                     int xpage = (int) (xscroll / pageframe.size.width + 0.5f);
@@ -432,7 +432,7 @@ public class IOSScrollView extends IOSView {
                     if (toY < 0)
                         toY = 0;
 
-                    smoothScrollTo(xIOS(toX), yIOS(toY));
+                    smoothScrollTo((int) (x2Android(toX) + 0.5f), (int) (y2Android(toY)));
                 } else {
                     final VelocityTracker velocityTracker = mVelocityTracker;
                     velocityTracker.computeCurrentVelocity(1000, mMaximumVelocity);

@@ -52,7 +52,7 @@ public class UIPickerView extends UIView {
 
     public UIPickerView(CGRect rect) {
         super(rect);
-        __base().setBackgroundDrawable(new GradientDrawable(GradientDrawable.Orientation.BOTTOM_TOP, new int[]{0xff222222, 0xff666666, 0xff111111}));
+        xm_base().setBackgroundDrawable(new GradientDrawable(GradientDrawable.Orientation.BOTTOM_TOP, new int[]{0xff222222, 0xff666666, 0xff111111}));
     }
 
     public int getNumberOfComponents() {

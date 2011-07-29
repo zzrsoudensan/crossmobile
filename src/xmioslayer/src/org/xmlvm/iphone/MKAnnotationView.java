@@ -16,8 +16,10 @@
  */
 package org.xmlvm.iphone;
 
+import android.app.Activity;
 import android.app.Dialog;
 import android.graphics.drawable.Drawable;
+import android.view.MotionEvent;
 import android.view.ViewGroup;
 import android.view.Window;
 import com.google.android.maps.GeoPoint;
@@ -42,6 +44,7 @@ public class MKAnnotationView extends UIView {
     private boolean draggable;
     private int dragState;
     //
+    private xmEventDispatcher dispatcher = new xmEventDispatcher(this);
     private UILabel title;
     private UILabel subtitle;
     private UIButton close;
@@ -183,12 +186,12 @@ public class MKAnnotationView extends UIView {
         return dragState;
     }
 
-    public void setDragState(int mkAnnotationViewDragState) {
+    public void setDragState(int MKAnnotationViewDragState) {
         setDragState(dragState, false);
     }
 
-    public void setDragState(int mkAnnotationViewDragState, boolean animated) {
-        this.dragState = mkAnnotationViewDragState;
+    public void setDragState(int MKAnnotationViewDragState, boolean animated) {
+        this.dragState = MKAnnotationViewDragState;
     }
 
     public boolean isDraggable() {
@@ -207,8 +210,8 @@ public class MKAnnotationView extends UIView {
             Drawable icon = image.getModel();
             int width = icon.getIntrinsicWidth();
             int height = icon.getIntrinsicHeight();
-            int deltax = width / 2 + IOSView.xIOS(centerOffset.x);
-            int deltay = height / 2 + IOSView.yIOS(centerOffset.y);
+            int deltax = (int) (width / 2f + IOSView.x2Android(centerOffset.x) + 0.5f);
+            int deltay = (int) (height / 2f + IOSView.y2Android(centerOffset.y) + 0.5f);
             icon.setBounds(-deltax, -deltay, width - deltax, height - deltay);
             overlay.setMarker(icon);
         }
@@ -224,12 +227,24 @@ public class MKAnnotationView extends UIView {
         title.setText(annotation.title());
         subtitle.setText(annotation.subtitle());
 
-        if (__base().getParent() != null)
-            ((ViewGroup) __base().getParent()).removeView(__base());
-        dialog.setContentView(__base());
+        if (xm_base().getParent() != null)
+            ((ViewGroup) xm_base().getParent()).removeView(xm_base());
+        dialog.setContentView(xm_base());
         dialogref = new WeakReference<Dialog>(dialog);
         dialog.show();
 
         return true;
+    }
+
+    @Override
+    IOSView createBaseObject(Activity activity) {
+        return new IOSView(activity) {
+
+            @Override
+            public boolean dispatchTouchEvent(MotionEvent ev) {
+                dispatcher.send(ev, true);
+                return super.dispatchTouchEvent(ev);   // For other native widgets to work
+            }
+        };
     }
 }

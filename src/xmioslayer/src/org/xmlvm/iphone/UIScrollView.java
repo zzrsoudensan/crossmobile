@@ -44,17 +44,17 @@ public class UIScrollView extends UIView {
             scroller = new IOSScroller();
             setFrame(frame);
             setContentSize(frame.size);
-            scroller.addView(__base());
+            scroller.addView(xm_base());
         } else
             scroller = null;
     }
 
     public CGSize getContentSize() {
-        return ((IOSView.LayoutParams) __base().getLayoutParams()).getFrame().size;
+        return ((IOSView.LayoutParams) xm_base().getLayoutParams()).getFrame().size;
     }
 
     public void setContentSize(CGSize contentSize) {
-        __base().setLayoutParams(new IOSView.LayoutParams(contentSize));
+        xm_base().setLayoutParams(new IOSView.LayoutParams(contentSize));
         scroller.setContentSize(contentSize);
     }
 
@@ -87,7 +87,7 @@ public class UIScrollView extends UIView {
     }
 
     public void setContentOffset(CGPoint offset, boolean animated) {
-        scroller.scrollTo(IOSView.xIOS(offset.x), IOSView.yIOS(offset.y));
+        scroller.scrollTo((int) (IOSView.x2Android(offset.x) + 0.5f), (int) (IOSView.y2Android(offset.y) + 0.5f));
     }
 
     public CGPoint getContentOffset() {

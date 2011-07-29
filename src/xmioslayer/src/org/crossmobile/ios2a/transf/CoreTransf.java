@@ -36,12 +36,12 @@ public abstract class CoreTransf {
         animationsEnabled = enabled;
     }
 
-    public static CoreTransf normal() {
+    public static CoreTransf instant() {
         return instant;
     }
 
     public static CoreTransf create(String ID) {
-        return new AnimatedTranfs(ID);
+        return new AnimatedTransf(ID);
     }
 
     public abstract void setFrame(IOSView view, CGRect frame);

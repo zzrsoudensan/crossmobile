@@ -99,13 +99,13 @@ public class UITextField extends UIView {
     }
 
     public boolean isSecureTextEntry() {
-        return ((EditText) __model()).getTransformationMethod() instanceof PasswordTransformationMethod;
+        return ((EditText) xm_model()).getTransformationMethod() instanceof PasswordTransformationMethod;
     }
 
     public void setSecureTextEntry(boolean secureTextEntry) {
         if (isSecureTextEntry() == secureTextEntry)
             return;
-        EditText model = (EditText) __model();
+        EditText model = (EditText) xm_model();
         if (secureTextEntry) {
             defaultTransfMode = model.getTransformationMethod();
             model.setTransformationMethod(new PasswordTransformationMethod());
@@ -114,19 +114,19 @@ public class UITextField extends UIView {
     }
 
     public void setText(String text) {
-        ((EditText) __model()).setText(text);
+        ((EditText) xm_model()).setText(text);
     }
 
     public String getText() {
-        return ((EditText) __model()).getText().toString();
+        return ((EditText) xm_model()).getText().toString();
     }
 
     public void setTextColor(UIColor color) {
-        ((EditText) __model()).setTextColor(color.getModelColor());
+        ((EditText) xm_model()).setTextColor(color.getModelColor());
     }
 
     public UIColor getTextColor() {
-        return new UIColor(((EditText) __model()).getTextColors().getDefaultColor());
+        return new UIColor(((EditText) xm_model()).getTextColors().getDefaultColor());
     }
 
     public void setBorderStyle(int UITextBorderStyle) {
@@ -154,19 +154,19 @@ public class UITextField extends UIView {
     }
 
     public int getTextAlignment() {
-        return UITextAlignment.gravityToAlignment(((EditText) __model()).getGravity());
+        return UITextAlignment.gravityToAlignment(((EditText) xm_model()).getGravity());
     }
 
     public void setTextAlignment(int UITextAlignment) {
-        ((EditText) __model()).setGravity(org.xmlvm.iphone.UITextAlignment.alignmentToGravity(UITextAlignment));
+        ((EditText) xm_model()).setGravity(org.xmlvm.iphone.UITextAlignment.alignmentToGravity(UITextAlignment));
     }
 
     public void setPlaceholder(String placeholder) {
-        ((EditText) __model()).setHint(placeholder);
+        ((EditText) xm_model()).setHint(placeholder);
     }
 
     public String getPlaceholder() {
-        return ((EditText) __model()).getHint().toString();
+        return ((EditText) xm_model()).getHint().toString();
     }
 
     public void setDelegate(UITextFieldDelegate delegate) {
@@ -182,7 +182,7 @@ public class UITextField extends UIView {
         if (delegate == null && (!delegate.textFieldShouldEndEditing(this)))
             return false;
         InputMethodManager manager = (InputMethodManager) MainActivity.current.getSystemService(Context.INPUT_METHOD_SERVICE);
-        manager.hideSoftInputFromWindow(__model().getWindowToken(), 0);
+        manager.hideSoftInputFromWindow(xm_model().getWindowToken(), 0);
         if (delegate != null)
             delegate.textFieldDidEndEditing(this);
         return false;
@@ -193,16 +193,16 @@ public class UITextField extends UIView {
         if (delegate != null && (!delegate.textFieldShouldBeginEditing(this)))
             return false;
         InputMethodManager manager = (InputMethodManager) MainActivity.current.getSystemService(Context.INPUT_METHOD_SERVICE);
-        manager.showSoftInput(__model(), InputMethodManager.SHOW_FORCED);
+        manager.showSoftInput(xm_model(), InputMethodManager.SHOW_FORCED);
         if (delegate != null)
             delegate.textFieldDidEndEditing(this);
 
 //        InputMethodManager imm = (InputMethodManager) MainActivity.current.getSystemService(Context.INPUT_METHOD_SERVICE);
 //        android.content.res.Configuration config = MainActivity.current.getResources().getConfiguration();
 //        if (config.hardKeyboardHidden == Configuration.HARDKEYBOARDHIDDEN_YES) {
-// //            __model().requestFocus();
-// //            __model().setSelected(true);
-//            imm.restartInput(__model());
+// //            xm_model().requestFocus();
+// //            xm_model().setSelected(true);
+//            imm.restartInput(xm_model());
 //            imm.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0);
 //        }
         return true;

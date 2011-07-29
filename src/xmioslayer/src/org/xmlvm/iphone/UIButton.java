@@ -27,10 +27,11 @@ public class UIButton extends UIControl {
     private static final UIFont BUTTONFONT = UIFont.boldSystemFontOfSize(UIFont.buttonFontSize());
     //
     private final int buttonType;
-    private ButtonStates states = new ButtonStates();
+    private xmButtonStates states = new xmButtonStates();
     private UILabel title;
     private UIImageView fore;
     private boolean imagefills = true;
+    private boolean updatableBackImage = true;
 
     public static UIButton buttonWithType(int UIButtonType) {
         UIButton result;
@@ -263,30 +264,37 @@ public class UIButton extends UIControl {
                     fore.setImage(foreimg);
                 }
 
-                UIImage backimg = states.getBack();
-                if (backimg != null)
-                    __model().setBackgroundDrawable(backimg.getModel());
-                else
-                    __model().setBackgroundDrawable(null);
+                if (updatableBackImage) {
+                    UIImage backimg = states.getBack();
+                    if (backimg != null)
+                        xm_model().setBackgroundDrawable(backimg.getModel());
+                    else
+                        xm_model().setBackgroundDrawable(null);
+                }
             }
         });
     }
 
     float getPrefferedWidth() {
-        __model().measure(0, 0);
-        int max = __model().getMeasuredWidth();
+        xm_model().measure(0, 0);
+        int max = xm_model().getMeasuredWidth();
         if (title != null) {
-            title.__model().measure(0, 0);
-            max = Math.max(max, title.__model().getMeasuredWidth() + 16);
+            title.xm_model().measure(0, 0);
+            max = Math.max(max, title.xm_model().getMeasuredWidth() + 16);
         }
         if (fore != null) {
-            fore.__model().measure(0, 0);
-            max = Math.max(max, fore.__model().getMeasuredWidth());
+            fore.xm_model().measure(0, 0);
+            max = Math.max(max, fore.xm_model().getMeasuredWidth());
         }
-        return IOSView.xAndroid(max);
+        return IOSView.x2IOS(max);
     }
 
     void setImageFillsArea(boolean imagefills) {
         this.imagefills = imagefills;
+    }
+
+    // The background images would not be updated automatically
+    void setUpdatableBackImage(boolean status) {
+        updatableBackImage = status;
     }
 }

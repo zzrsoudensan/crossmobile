@@ -16,14 +16,13 @@
  */
 package org.xmlvm.iphone;
 
-import org.crossmobile.ios2a.GraphicsUtils.SegmentShape;
-import android.app.Activity;
+import static org.crossmobile.ios2a.GraphicsUtils.SegmentShape.Location.*;
+
 import android.graphics.drawable.ShapeDrawable;
-import android.view.View;
 import java.util.ArrayList;
 import org.crossmobile.ios2a.GraphicsUtils;
+import org.crossmobile.ios2a.GraphicsUtils.SegmentShape;
 import org.crossmobile.ios2a.UIRunner;
-import static org.crossmobile.ios2a.GraphicsUtils.SegmentShape.Location.*;
 
 public class UISegmentedControl extends UIControl {
 
@@ -129,12 +128,13 @@ public class UISegmentedControl extends UIControl {
                 super.setHighlighted(highlighted);
             }
         };
+        segment.setUpdatableBackImage(false);  // REQUIRED!
         segment.setAdjustsImageWhenHighlighted(false);
         segment.setImageFillsArea(false);
         segment.setTag(index);
         segment.addTarget(delegate, UIControlEvent.AllEvents);
         ShapeDrawable back = new ShapeDrawable(new SegmentShape());
-        segment.__base().setBackgroundDrawable(back);
+        segment.xm_base().setBackgroundDrawable(back);
         int cindex = (index < 0) ? 0 : ((index > items.size()) ? items.size() : index);
         items.add(cindex, segment);
 
@@ -214,7 +214,7 @@ public class UISegmentedControl extends UIControl {
     }
 
     private void setSegmentSelected(UIButton segment, boolean selected) {
-        ((ShapeDrawable) segment.__base().getBackground()).getPaint().setColor(selected ? clickedColor.getModelColor() : tintColor.getModelColor());
+        ((ShapeDrawable) segment.xm_base().getBackground()).getPaint().setColor(selected ? clickedColor.getModelColor() : tintColor.getModelColor());
     }
 
     private void updateMetrics() {
@@ -252,16 +252,10 @@ public class UISegmentedControl extends UIControl {
                         loc = LEFT;
                     else if (i == itemmax)
                         loc = RIGHT;
-                    ((SegmentShape) ((ShapeDrawable) button.__base().getBackground()).getShape()).updateShape(loc);
+                    ((SegmentShape) ((ShapeDrawable) button.xm_base().getBackground()).getShape()).updateShape(loc);
                 }
                 setNeedsDisplay();
             }
         });
-    }
-
-    // Model object is a view instead of a button
-    @Override
-    View createModelObject(Activity activity) {
-        return null;
     }
 }

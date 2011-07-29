@@ -40,20 +40,20 @@ public class UIWebView extends UIView {
     public void loadRequest(NSURLRequest request) {
         if (request != null && request.URL() != null && request.URL().absoluteString() != null
                 && (delegate == null || delegate.shouldStartLoadWithRequest(this, request, UIWebViewNavigationType.LinkClicked)))
-            ((WebView) __model()).loadUrl(request.URL().absoluteString());
+            ((WebView) xm_model()).loadUrl(request.URL().absoluteString());
     }
 
     public void loadHTMLString(String string, NSURL baseURL) {
         if (baseURL != null && baseURL.absoluteString() != null)
-            ((WebView) __model()).loadDataWithBaseURL(baseURL.absoluteString(), string, "text/html", "utf-8", null);
+            ((WebView) xm_model()).loadDataWithBaseURL(baseURL.absoluteString(), string, "text/html", "utf-8", null);
         else
-            ((WebView) __model()).loadData(string, "text/html", "utf-8");
+            ((WebView) xm_model()).loadData(string, "text/html", "utf-8");
     }
 
     public String stringByEvaluatingJavaScriptFromString(String script) {
         if (!script.startsWith(JSTAG))
             script = JSTAG + script;
-        ((WebView) __model()).loadUrl(script);
+        ((WebView) xm_model()).loadUrl(script);
         System.err.println("Call back string not implemented yet. Probably a addJavascriptInterface should be activated.");
         return null;
     }
@@ -67,17 +67,17 @@ public class UIWebView extends UIView {
     }
 
     public void reload() {
-        ((WebView) __model()).reload();
+        ((WebView) xm_model()).reload();
     }
 
     public void goBack() {
-        WebView wv = (WebView) __model();
+        WebView wv = (WebView) xm_model();
         if (wv.canGoBack())
             wv.goBack();
     }
 
     public void goForward() {
-        WebView wv = (WebView) __model();
+        WebView wv = (WebView) xm_model();
         if (wv.canGoForward())
             wv.goForward();
     }

@@ -75,25 +75,25 @@ public class MKMapView extends UIView {
         return mapType;
     }
 
-    public void setMapType(int mkMapType) {
-        MapView map = (MapView) __model();
-        switch (mkMapType) {
-            case MKMapType.Standard:
+    public void setMapType(int MKMapType) {
+        MapView map = (MapView) xm_model();
+        switch (MKMapType) {
+            case org.xmlvm.iphone.MKMapType.Standard:
                 map.setSatellite(false);
                 break;
-            case MKMapType.Hybrid:
-            case MKMapType.Satellite:
+            case org.xmlvm.iphone.MKMapType.Hybrid:
+            case org.xmlvm.iphone.MKMapType.Satellite:
                 map.setSatellite(true);
         }
-        mapType = mkMapType;
+        mapType = MKMapType;
     }
 
     public boolean isScrollEnabled() {
-        return __model().isClickable();
+        return xm_model().isClickable();
     }
 
     public void setScrollEnabled(boolean scrollEnabled) {
-        __model().setClickable(scrollEnabled);
+        xm_model().setClickable(scrollEnabled);
     }
 
     public boolean isZoomEnabled() {
@@ -102,7 +102,7 @@ public class MKMapView extends UIView {
 
     public void setZoomEnabled(boolean zoomEnabled) {
         this.zoomEnabled = zoomEnabled;
-        ((MapView) __model()).setBuiltInZoomControls(zoomEnabled);
+        ((MapView) xm_model()).setBuiltInZoomControls(zoomEnabled);
     }
 
     public MKMapViewDelegate getDelegate() {
@@ -125,11 +125,11 @@ public class MKMapView extends UIView {
         this.region = region;
         setCenterCoordinate(region.center, animated);
         int zoom = (int) Math.round(Math.log(720 / region.span.latitudeDelta) / Math.log(2));   // use only latitude - needs half value (360/0.5 = 720)
-        ((MapView) __model()).getController().setZoom(zoom);
+        ((MapView) xm_model()).getController().setZoom(zoom);
     }
 
     public CLLocationCoordinate2D getCenterCoordinate() {
-        GeoPoint point = ((MapView) __model()).getMapCenter();
+        GeoPoint point = ((MapView) xm_model()).getMapCenter();
         return new CLLocationCoordinate2D(point.getLatitudeE6() / 1e6, point.getLongitudeE6() / 1e6);
     }
 
@@ -140,9 +140,9 @@ public class MKMapView extends UIView {
     public void setCenterCoordinate(CLLocationCoordinate2D centerCoordinate, boolean animated) {
         GeoPoint point = new GeoPoint((int) (centerCoordinate.latitude * 1e6), (int) (centerCoordinate.longitude * 1e6));
         if (animated)
-            ((MapView) __model()).getController().animateTo(point);
+            ((MapView) xm_model()).getController().animateTo(point);
         else
-            ((MapView) __model()).getController().setCenter(point);
+            ((MapView) xm_model()).getController().setCenter(point);
     }
 
     public MKMapRect getVisibleMapRect() {

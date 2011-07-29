@@ -31,7 +31,7 @@ import org.xmlvm.iphone.CGRect;
 import org.xmlvm.iphone.CGSize;
 import org.xmlvm.iphone.UIApplication;
 import org.xmlvm.iphone.UIScreen;
-import org.crossmobile.ios2a.transf.Parameters;
+import org.crossmobile.ios2a.transf.IOSAnimation;
 
 public class IOSView extends ViewGroup implements IOSChild {
 
@@ -46,13 +46,12 @@ public class IOSView extends ViewGroup implements IOSChild {
     }
     //
     private RichTransformation transformation = null;
-    private int deltaY = 0; // This is useful to reserve space for views hidden by status bar
+    private float deltaY = 0; // This is useful to reserve space for views hidden by status bar
 
     public static void updateBarMetrics(Activity activity) {
         Rect rectgle = new Rect();
         activity.getWindow().getDecorView().getWindowVisibleDisplayFrame(rectgle);
         androidBar = rectgle.top;
-        System.out.println("Bar is " + androidBar);
     }
 
     public static void updateRatios() {
@@ -92,11 +91,11 @@ public class IOSView extends ViewGroup implements IOSChild {
     /** 
      * This method is a call back for animations, so that they can set the parameters,
      * to be ready to redraw when the animation finishes.
-     * This method is called just when commiting animations, before any animation is performed.
-     * No invalidate() is nessesary, since an animation is pending.
-     * @param params 
+     * This method is called just when committing animations, before any animation is performed.
+     * No invalidate() is necessary, since an animation is pending.
+     * @param params The actual IOSAnimation animation
      */
-    public void setTransformationParameters(Parameters params) {
+    public void setTransformationParameters(IOSAnimation params) {
         transformation = RichTransformation.setParameters(params);
     }
 
@@ -107,7 +106,7 @@ public class IOSView extends ViewGroup implements IOSChild {
             View child = getChildAt(i);
             if (child.getVisibility() != GONE) {
                 IOSView.LayoutParams ipar = (IOSView.LayoutParams) child.getLayoutParams();
-                child.layout(ipar.x, ipar.y - deltaY, ipar.x + ipar.width, ipar.y - deltaY + ipar.height);
+                child.layout((int) (ipar.xAndr + 0.5f), (int) (ipar.yAndr - deltaY + 0.5f), (int) (ipar.xAndr + ipar.wAndr + 0.5f), (int) (ipar.yAndr - deltaY + ipar.hAndr + 0.5f));
             }
         }
     }
@@ -131,11 +130,11 @@ public class IOSView extends ViewGroup implements IOSChild {
 
                 IOSView.LayoutParams lp = (IOSView.LayoutParams) child.getLayoutParams();
 
-                childRight = lp.x + child.getMeasuredWidth();
-                childBottom = lp.y + child.getMeasuredHeight();
+                childRight = (int) (lp.xAndr + child.getMeasuredWidth() + 0.5f);
+                childBottom = (int) (lp.yAndr + child.getMeasuredHeight() + 0.5f);
 
-                maxWidth = Math.max(Math.max(maxWidth, childRight), lp.width);
-                maxHeight = Math.max(Math.max(maxHeight, childBottom), lp.height);
+                maxWidth = Math.max(Math.max(maxWidth, childRight), (int) (lp.wAndr + 0.5f));
+                maxHeight = Math.max(Math.max(maxHeight, childBottom), (int) (lp.hAndr + 0.5f));
             }
         }
 
@@ -173,60 +172,60 @@ public class IOSView extends ViewGroup implements IOSChild {
     public void updateStatusBarDelta() {
         // Use iphone metrics and not android (i.e. androidBar),
         // so that half-visible items would display correctly
-        deltaY = UIApplication.sharedApplication().isStatusBarHidden() ? 0 : xIOS(STATUSBAR_HEIGHT);
+        deltaY = UIApplication.sharedApplication().isStatusBarHidden() ? 0 : y2Android(STATUSBAR_HEIGHT);
     }
 
     public static class LayoutParams extends AbsListView.LayoutParams {
 
-        public int x;
-        public int y;
+        private float xAndr;
+        private float yAndr;
+        private float wAndr;
+        private float hAndr;
 
         public LayoutParams(CGRect frame) {
-            this(xIOS(frame.origin.x), yIOS(frame.origin.y), xIOS(frame.size.width), yIOS(frame.size.height));
+            this(x2Android(frame.origin.x), y2Android(frame.origin.y), x2Android(frame.size.width), y2Android(frame.size.height));
         }
 
         public LayoutParams(CGSize size) {
-            this(0, 0, xIOS(size.width), yIOS(size.height));
+            this(0, 0, x2Android(size.width), y2Android(size.height));
         }
 
-        private LayoutParams(int x, int y, int width, int height) {
-            super(width, height);
-            this.x = x;
-            this.y = y;
-        }
-
-        public void updateParams(Rect rect) {
-            this.x = rect.left;
-            this.y = rect.top;
-            this.width = rect.right - rect.left;
-            this.height = rect.bottom - rect.top;
+        private LayoutParams(float xAndr, float yAndr, float wAndr, float hAndr) {
+            super((int) (wAndr + 0.9f), (int) (hAndr + 0.9f)); // make sure it is big enough, by 0.9 pixels
+            this.xAndr = xAndr;
+            this.yAndr = yAndr;
+            this.wAndr = wAndr;
+            this.hAndr = hAndr;
         }
 
         public CGRect getFrame() {
-            return new CGRect(xAndroid(x), yAndroid(y), xAndroid(width), yAndroid(height));
+            return new CGRect(x2IOS(xAndr), y2IOS(yAndr), x2IOS(wAndr), y2IOS(hAndr));
         }
 
         @Override
         public String toString() {
-            return "[x=" + x + " y=" + y + " width=" + width + " height=" + height + "]";
+            return "[x=" + x2IOS(xAndr) + " y=" + y2IOS(yAndr) + " width=" + x2IOS(wAndr) + " height=" + y2IOS(hAndr) + "]";
         }
     }
 
-    public static int xIOS(float iosmetric) {
-        return (int) (iosmetric * xratio + 0.5);
+    public static float x2Android(float fromIOS) {
+        return fromIOS * xratio;
+    }
+
+    public static float y2Android(float fromIOS) {
+        return fromIOS * yratio;
+    }
+
+    public static float x2IOS(float fromAndroid) {
+        return fromAndroid / xratio;
 
     }
 
-    public static int yIOS(float iosmetric) {
-        return (int) (iosmetric * yratio + 0.5);
+    public static float y2IOS(float fromAndroid) {
+        return fromAndroid / yratio;
     }
 
-    public static float xAndroid(int ametric) {
-        return ametric / xratio;
-
-    }
-
-    public static float yAndroid(int ametric) {
-        return ametric / yratio;
+    public static float androidBarHeight() {
+        return UIApplication.sharedApplication().getKeyWindow().xm_base().deltaY;
     }
 }

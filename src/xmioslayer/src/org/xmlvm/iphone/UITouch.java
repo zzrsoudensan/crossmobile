@@ -20,37 +20,23 @@ import org.crossmobile.ios2a.ImplementationError;
 
 public class UITouch extends NSObject {
 
-    private final int phase;
-    private final UIView view;
     private final double timestamp;
-    private final float viewX;
-    private final float viewY;
+    final int phase;
+    final UIView parent;
+    UIView view;
+    CGPoint wloc;
 
-    UITouch(int UITouchPhase, UIView view, double timestamp, float x, float y) {
+    UITouch(UIView parent, int UITouchPhase, double timestamp, CGPoint wloc) {
+        this.parent = parent;
         this.phase = UITouchPhase;
-        this.view = view;
         this.timestamp = timestamp;
-        this.viewX = x;
-        this.viewY = y;
+        this.wloc = wloc;
     }
 
     public CGPoint locationInView(UIView request) {
-        if (request == view)
-            return new CGPoint(viewX, viewY);
-        else
-            throw new ImplementationError();
-//        if (request == null)
-//            request = UIApplication.sharedApplication().getKeyWindow();
-//        float dx = 0;
-//        float dy = 0;
-//        CGRect frame;
-//        while (request != null) {
-//            frame = request.getFrame();
-//            dx += frame.origin.x;
-//            dy += frame.origin.y;
-//            request = request.getSuperview();
-//        }
-//        return new CGPoint(viewX - dx, viewY - dy);
+        if (request == null)
+            request = parent;
+        return request.convertPointFromView(wloc, parent);
     }
 
     public UIView getView() {
@@ -58,7 +44,7 @@ public class UITouch extends NSObject {
     }
 
     public UIWindow getWindow() {
-        return view.getWindow();
+        return parent.getWindow();
     }
 
     public int getTapCount() {

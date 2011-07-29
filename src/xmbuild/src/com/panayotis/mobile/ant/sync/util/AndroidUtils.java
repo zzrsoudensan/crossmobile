@@ -68,7 +68,7 @@ public class AndroidUtils extends XMLUtils {
         FileUtils.createFile(new File(task.getResources(), "layout" + File.separator + Templates.SPLASHLAYOUT + ".xml"), Templates.SPLASHLAYOUT_TEMPLATE);
     }
 
-    public void updateAndroidManifest(String packname, String classname) throws BuildException {
+    public void updateAndroidManifest(String packname, String classname, boolean debuggable) throws BuildException {
         String fullclassname = packname + "." + classname;
         String icon = "@drawable/" + Templates.ICONDRAWABLE;
 
@@ -86,6 +86,7 @@ public class AndroidUtils extends XMLUtils {
             setAttribute(application, "android:label", task.getDisplayName());
             setAttribute(application, "android:icon", icon);
             setAttribute(application, "android:theme", "@android:style/Theme.NoTitleBar");
+            setAttribute(application, "android:debuggable", debuggable ? "true" : "false");
 
             for (Node activity : getNodesWithName(application, "activity", true))
                 if (actionNameEndsWith(activity, Templates.LAUNCHTAG))
@@ -125,6 +126,7 @@ public class AndroidUtils extends XMLUtils {
     }
 
     private void setMainActivity(Node activity, String packname, String fullclassname) {
+        setAttribute(activity, "android:launchMode", "singleInstance");
         setAttribute(activity, "android:name", fullclassname);
         setAttribute(activity, "android:screenOrientation", "portrait");
 
@@ -134,6 +136,7 @@ public class AndroidUtils extends XMLUtils {
     }
 
     private void setMapActivity(Node activity, String packname) {
+        setAttribute(activity, "android:launchMode", "singleInstance");
         setAttribute(activity, "android:name", "org.crossmobile.ios2a.IOSMapActivity");
         setAttribute(activity, "android:screenOrientation", "portrait");
 

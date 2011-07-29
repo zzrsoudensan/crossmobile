@@ -109,7 +109,7 @@ public class IOSTableAdapter implements ListAdapter {
             if (!reuselist.contains(idreuse))
                 reuselist.add(idreuse);
         }
-        return iview.__base();
+        return iview.xm_base();
     }
 
     public int getItemViewType(int i) {

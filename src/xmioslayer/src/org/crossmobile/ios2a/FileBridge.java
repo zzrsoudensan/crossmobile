@@ -129,7 +129,7 @@ public class FileBridge {
 
     public static View getLayout(String name) {
         int id = getID("layout", name);
-        return MainActivity.current.getLayoutInflater().inflate(id, new UIView().__base(), false);
+        return MainActivity.current.getLayoutInflater().inflate(id, new UIView().xm_base(), false);
     }
 
     public static void deleteRecursive(File f) {

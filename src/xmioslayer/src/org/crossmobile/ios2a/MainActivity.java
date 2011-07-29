@@ -49,6 +49,7 @@ public abstract class MainActivity extends ActivityGroup {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         current = this;
+        ExceptionHandler.setActive();
 
         // Find iphone main class name
         final String classname = getMainClass();

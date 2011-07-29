@@ -37,25 +37,25 @@ public class UIImagePickerController extends UINavigationController {
         mediaTypes.add(UTType.Image);
     }
 
-    public static boolean isSourceTypeAvailable(int uiImagePickerControllerSourceType) {
+    public static boolean isSourceTypeAvailable(int UIImagePickerControllerSourceType) {
         return false;
     }
 
-    public static ArrayList<String> availableMediaTypesForSourceType(int uiImagePickerControllerSourceType) {
+    public static ArrayList<String> availableMediaTypesForSourceType(int UIImagePickerControllerSourceType) {
         ArrayList<String> results = new ArrayList<String>();
         results.add(UTType.Image);
-        return new ArrayList();
+        return new ArrayList<String>();
     }
 
-    public static boolean isCameraDeviceAvailable(int uiImagePickerControllerCameraDevice) {
+    public static boolean isCameraDeviceAvailable(int UIImagePickerControllerCameraDevice) {
         return false;
     }
 
-    public static ArrayList<Integer> availableCaptureModesForCameraDevice(int uiImagePickerControllerCameraDevice) {
+    public static ArrayList<Integer> availableCaptureModesForCameraDevice(int UIImagePickerControllerCameraDevice) {
         return new ArrayList<Integer>();
     }
 
-    public static boolean isFlashAvailableForCameraDevice(int uiImagePickerControllerCameraDevice) {
+    public static boolean isFlashAvailableForCameraDevice(int UIImagePickerControllerCameraDevice) {
         return false;
     }
 

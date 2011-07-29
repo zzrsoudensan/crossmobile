@@ -25,14 +25,14 @@ import org.xmlvm.iphone.CGRect;
 import org.xmlvm.iphone.UIViewAnimationDelegate;
 import org.crossmobile.ios2a.IOSView;
 
-public class AnimatedTranfs extends StaticTranfs implements Animation.AnimationListener {
+public class AnimatedTransf extends StaticTranfs implements Animation.AnimationListener {
 
     private String ID;
-    private HashMap<IOSView, Parameters> map = new HashMap<IOSView, Parameters>();
+    private HashMap<IOSView, IOSAnimation> map = new HashMap<IOSView, IOSAnimation>();
     private long duration = 300;
     private UIViewAnimationDelegate delegate;
 
-    AnimatedTranfs(String ID) {
+    AnimatedTransf(String ID) {
         this.ID = ID;
     }
 
@@ -42,7 +42,6 @@ public class AnimatedTranfs extends StaticTranfs implements Animation.AnimationL
             super.setFrame(view, frame);
             return;
         }
-        //    AnimationSet set = getSet(view);
         super.setFrame(view, frame);
     }
 
@@ -61,7 +60,6 @@ public class AnimatedTranfs extends StaticTranfs implements Animation.AnimationL
             super.setAlpha(view, to);
             return;
         }
-        // Transformation parameters are stored in IOSView later, during "commit"
         getParameters(view).setAlpha(view.getAlpha(), to);
     }
 
@@ -71,7 +69,7 @@ public class AnimatedTranfs extends StaticTranfs implements Animation.AnimationL
             super.setTransform(view, transform);
             return;
         }
-        super.setTransform(view, transform);
+        getParameters(view).setTransform(view.getTransform(), transform);
     }
 
     @Override
@@ -81,12 +79,10 @@ public class AnimatedTranfs extends StaticTranfs implements Animation.AnimationL
 
     @Override
     public void commit() {
-        Parameters params = null;
-        Animation anim = null;
+        IOSAnimation anim = null;
         for (IOSView view : map.keySet()) {
-            params = map.get(view);
-            view.setTransformationParameters(params);
-            anim = params.createAnimation();
+            anim = map.get(view);
+            view.setTransformationParameters(anim);
             anim.setDuration(duration);
             view.startAnimation(anim);
         }
@@ -100,13 +96,13 @@ public class AnimatedTranfs extends StaticTranfs implements Animation.AnimationL
         this.delegate = delegate;
     }
 
-    private Parameters getParameters(IOSView view) {
-        Parameters transf = map.get(view);
-        if (transf != null)
-            return transf;
-        transf = new Parameters();
-        map.put(view, transf);
-        return transf;
+    private IOSAnimation getParameters(IOSView view) {
+        IOSAnimation anim = map.get(view);
+        if (anim != null)
+            return anim;
+        anim = new IOSAnimation();
+        map.put(view, anim);
+        return anim;
     }
 
     public void onAnimationStart(Animation anmtn) {

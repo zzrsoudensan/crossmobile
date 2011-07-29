@@ -40,12 +40,12 @@ public class SingleWheelView extends UIView {
     }
 
     public int selectedRow() {
-        return ((WheelView) __model()).getCurrentItem();
+        return ((WheelView) xm_model()).getCurrentItem();
     }
 
     public void selectRow(int row, boolean animated) {
         lastrow = row;
-        ((WheelView) __model()).setCurrentItem(row, animated);
+        ((WheelView) xm_model()).setCurrentItem(row, animated);
     }
 
     private void rowHasChanged(int newrow) {
@@ -73,7 +73,7 @@ public class SingleWheelView extends UIView {
     }
 
     public void reloadData() {
-        ((WheelView) __model()).invalidateWheel(true);
+        ((WheelView) xm_model()).invalidateWheel(true);
     }
 
     private class SingleAdapter extends AbstractWheelTextAdapter {

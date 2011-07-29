@@ -39,9 +39,9 @@ public class UIImageView extends UIView {
             @Override
             public void exec() {
                 if (image == null)
-                    __model().setBackgroundDrawable(null);
+                    xm_model().setBackgroundDrawable(null);
                 else {
-                    __model().setBackgroundDrawable(image.getModel());
+                    xm_model().setBackgroundDrawable(image.getModel());
                     setContentMode(getContentMode());
                 }
             }
@@ -49,7 +49,7 @@ public class UIImageView extends UIView {
     }
 
     public UIImage getImage() {
-        Drawable d = __model().getBackground();
+        Drawable d = xm_model().getBackground();
         if (d instanceof BitmapDrawable)
             return new UIImage((BitmapDrawable) d);
         return null;

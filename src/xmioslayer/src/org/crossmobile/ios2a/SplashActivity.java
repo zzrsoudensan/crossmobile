@@ -47,11 +47,11 @@ public abstract class SplashActivity extends Activity {
 
                     @Override
                     public void run() {
-                        int wait = 2000;
+                        int wait = 1000;
                         try {
                             wait = Integer.parseInt(System.getProperty("ios.splash.delay"));
-                            if (wait < 1000)
-                                wait = 1000;
+                            if (wait < 0)
+                                wait = 0;
                         } catch (NumberFormatException ex) {
                         }
                         try {

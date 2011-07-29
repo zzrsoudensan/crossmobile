@@ -16,6 +16,9 @@
  */
 package org.xmlvm.iphone;
 
+import android.app.Activity;
+import android.view.MotionEvent;
+import org.crossmobile.ios2a.IOSView;
 import org.crossmobile.ios2a.ImplementationError;
 
 public class UITableViewCell extends UIView {
@@ -25,6 +28,7 @@ public class UITableViewCell extends UIView {
     boolean selected = false;
     private UIView accessoryView;
     private UILabel textlabel;
+    private xmEventDispatcher dispatcher = new xmEventDispatcher(this);
 
     public UITableViewCell() {
         this(UITableViewCellStyle.Default, null);
@@ -110,5 +114,17 @@ public class UITableViewCell extends UIView {
         frame.origin.y = 0;
         if (textlabel != null)
             textlabel.setFrame(frame);
+    }
+
+    @Override
+    IOSView createBaseObject(Activity activity) {
+        return new IOSView(activity) {
+
+            @Override
+            public boolean dispatchTouchEvent(MotionEvent ev) {
+                dispatcher.send(ev);
+                return super.dispatchTouchEvent(ev);   // For other native widgets to work
+            }
+        };
     }
 }

@@ -16,15 +16,55 @@
  */
 package org.xmlvm.iphone;
 
+import static android.view.MotionEvent.*;
+import static org.xmlvm.iphone.UITouchPhase.*;
+
+import android.view.MotionEvent;
+import java.util.HashSet;
 import java.util.Set;
-import org.crossmobile.ios2a.ImplementationError;
+import org.crossmobile.ios2a.IOSView;
 
 public class UIEvent extends NSObject {
 
-    UIEvent() {
+    private HashSet<UITouch> touches;
+    UITouch firsttouch;
+
+    UIEvent(xmEventDispatcher dispatcher, MotionEvent ev, boolean ignoreBar) {
+        float deltaY = ignoreBar ? 0 : IOSView.androidBarHeight();
+        int phase;
+        switch (ev.getAction()) {
+            case ACTION_DOWN:
+                phase = Began;
+                break;
+            case ACTION_MOVE:
+                phase = Moved;
+                break;
+            case ACTION_UP:
+                phase = Ended;
+                break;
+            case ACTION_CANCEL:
+            default:
+                phase = Cancelled;
+                break;
+        }
+
+        touches = new HashSet<UITouch>();
+        for (int p = ev.getPointerCount() - 1; p >= 0; p--) {
+            firsttouch = new UITouch(
+                    dispatcher.source,
+                    phase,
+                    System.currentTimeMillis() / 1000d,
+                    new CGPoint(IOSView.x2IOS((int) (0.5f + ev.getX(p))), IOSView.y2IOS((int) (0.5f + ev.getY(p) + deltaY))));
+            touches.add(firsttouch);
+        }
     }
 
     public Set<UITouch> allTouches() {
-        throw new ImplementationError();
+        return touches;
+    }
+
+    void updateToView(UIView view) {
+        for (UITouch t : touches)
+            t.view = view;
     }
 }

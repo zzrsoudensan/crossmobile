@@ -105,6 +105,7 @@ public class UIViewController extends UIResponder {
         if (view == null) {
             loadView();
             view.controller = this;
+            view.setFrame(UIScreen.mainScreen().getApplicationFrame());
             viewDidLoad();
         }
         return view;

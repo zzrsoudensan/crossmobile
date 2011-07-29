@@ -17,19 +17,15 @@
 package org.xmlvm.iphone;
 
 import static org.xmlvm.iphone.UIViewContentMode.*;
-import static android.view.MotionEvent.*;
-import static org.xmlvm.iphone.UITouchPhase.*;
 
 import org.crossmobile.ios2a.transf.CoreTransf;
-import java.util.Set;
-import android.view.MotionEvent;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.view.Gravity;
 import android.view.View;
+import android.view.ViewGroup.LayoutParams;
 import org.crossmobile.ios2a.IOSView;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import org.crossmobile.ios2a.IOSChild;
 import org.crossmobile.ios2a.ImplementationError;
@@ -38,7 +34,7 @@ import org.crossmobile.ios2a.UIRunner;
 public class UIView extends UIResponder {
 
     // Animation variables
-    static CoreTransf transf = CoreTransf.normal();
+    static CoreTransf transf = CoreTransf.instant();
     //
     private UIColor background;
     private int tag;
@@ -51,20 +47,25 @@ public class UIView extends UIResponder {
 
     @SuppressWarnings({"LeakingThisInConstructor", "OverridableMethodCallInConstructor"})
     public UIView(CGRect frame) {
-        __base().setTag(this);
+        xm_base().setTag(this);
         setTag(0);
         setFrame(frame);
         setUserInteractionEnabled(true);
     }
 
     public CGRect getFrame() {
-        return ((IOSView.LayoutParams) __base().getLayoutParams()).getFrame();
+        try {
+            return ((IOSView.LayoutParams) xm_base().getLayoutParams()).getFrame();
+        } catch (Exception e) {
+            LayoutParams lp = xm_base().getLayoutParams();
+            return new CGRect(0, 0, IOSView.x2IOS(lp.width), IOSView.y2IOS(lp.height));
+        }
     }
 
     public void setFrame(CGRect frame) {
-        if (__model() != __base())
-            __model().setLayoutParams(new IOSView.LayoutParams(frame.size));
-        transf.setFrame(__base(), frame);
+        if (xm_model() != xm_base())
+            xm_model().setLayoutParams(new IOSView.LayoutParams(frame.size));
+        transf.setFrame(xm_base(), frame);
     }
 
     public CGRect getBounds() {
@@ -86,25 +87,25 @@ public class UIView extends UIResponder {
             @Override
             public void exec() {
                 UIView.this.background = col;
-                transf.setBackgroundColor(__base(), col.getModelDrawable(), col.getModelColor());
+                transf.setBackgroundColor(xm_base(), col.getModelDrawable(), col.getModelColor());
             }
         });
     }
 
     public CGAffineTransform getTransform() {
-        return __base().getTransform();
+        return xm_base().getTransform();
     }
 
     public void setTransform(CGAffineTransform transform) {
-        transf.setTransform(__base(), transform);
+        transf.setTransform(xm_base(), transform);
     }
 
     public float getAlpha() {
-        return __base().getAlpha();
+        return xm_base().getAlpha();
     }
 
     public void setAlpha(float alpha) {
-        transf.setAlpha(__base(), alpha);
+        transf.setAlpha(xm_base(), alpha);
     }
 
     public void addSubview(UIView subView) {
@@ -264,7 +265,7 @@ public class UIView extends UIResponder {
 
             @Override
             public void exec() {
-                __base().requestLayout();
+                xm_base().requestLayout();
             }
         });
     }
@@ -282,7 +283,7 @@ public class UIView extends UIResponder {
     }
 
     public boolean isHidden() {
-        return __base().getVisibility() == View.INVISIBLE;
+        return xm_base().getVisibility() == View.INVISIBLE;
     }
 
     public void setHidden(final boolean hidden) {
@@ -290,14 +291,14 @@ public class UIView extends UIResponder {
 
             @Override
             public void exec() {
-                __base().setVisibility(hidden ? View.INVISIBLE : View.VISIBLE);
+                xm_base().setVisibility(hidden ? View.INVISIBLE : View.VISIBLE);
             }
         });
     }
 
     public void setContentMode(int UIViewContentMode) {
         contentMode = UIViewContentMode;
-        Drawable d = __model().getBackground();
+        Drawable d = xm_model().getBackground();
         if (!(d instanceof BitmapDrawable))
             return;
         BitmapDrawable bm = (BitmapDrawable) d;
@@ -347,41 +348,11 @@ public class UIView extends UIResponder {
     }
 
     public boolean isUserInteractionEnabled() {
-        return __model().isClickable();
+        return xm_model().isClickable();
     }
 
     public final void setUserInteractionEnabled(boolean userinteaction) {
-        __model().setClickable(userinteaction);
-        __model().setOnTouchListener(userinteaction ? new View.OnTouchListener() {
-
-            public boolean onTouch(View view, MotionEvent ev) {
-                UIEvent uie = new UIEvent();
-                switch (ev.getAction()) {
-                    case ACTION_DOWN:
-                        touchesBegan(getList(ev, Began), uie);
-                        break;
-                    case ACTION_MOVE:
-                        touchesMoved(getList(ev, Moved), uie);
-                        break;
-                    case ACTION_UP:
-                        touchesEnded(getList(ev, Ended), uie);
-                        break;
-                    case ACTION_CANCEL:
-                        touchesCancelled(getList(ev, Cancelled), uie);
-                        break;
-                }
-                return false;
-            }
-
-            private Set<UITouch> getList(MotionEvent ev, int phase) {
-                HashSet<UITouch> touches = new HashSet<UITouch>();
-                for (int p = 0; p < ev.getPointerCount(); p++)
-                    touches.add(new UITouch(phase, UIView.this, System.currentTimeMillis() / 1000d,
-                            IOSView.xAndroid((int) (0.5f + ev.getX(p))),
-                            IOSView.yAndroid((int) (0.5f + ev.getY(p)))));
-                return touches;
-            }
-        } : null);
+        xm_model().setClickable(userinteaction);
     }
 
     public boolean clipsToBounds() {
@@ -393,18 +364,49 @@ public class UIView extends UIResponder {
     }
 
     public CGPoint convertPointToView(CGPoint point, UIView view) {
-        throw new ImplementationError();
+        if (view == null)
+            view = getWindow();
+
+        return view.convertPointFromView(point, this);
     }
 
     public CGPoint convertPointFromView(CGPoint point, UIView view) {
+        // TODO take care of transformations
+        CGPoint p = new CGPoint(point);
+        if (view == this)
+            return p;
+        if (view == null)
+            view = getWindow();
+
+        UIView parent;
+        UIView lastfrom = this;
+        while ((parent = lastfrom.getSuperview()) != null) {
+            CGRect frame = lastfrom.getFrame();
+            p.x -= frame.origin.x;
+            p.y -= frame.origin.y;
+            lastfrom = parent;
+            if (parent == view)
+                return p;
+        }
+
+        UIView lastto = view == null ? getWindow() : view;
+        while ((parent = lastto.getSuperview()) != null) {
+            CGRect frame = lastto.getFrame();
+            p.x += frame.origin.x;
+            p.y += frame.origin.y;
+            lastto = parent;
+            if (parent == lastfrom)
+                return p;
+        }
+        // They don't have a common parent
+        throw new RuntimeException("UIView do not have a common anchestor");
+    }
+
+    public CGRect convertRectToView(CGRect rect, UIView view) {
         throw new ImplementationError();
     }
 
-    public CGRect convertRectToView(CGRect point, UIView view) {
-        throw new ImplementationError();
-    }
-
-    public CGRect convertRectFromView(CGRect point, UIView view) {
+    public CGRect convertRectFromView(CGRect rect, UIView view) {
         throw new ImplementationError();
     }
 
@@ -434,8 +436,10 @@ public class UIView extends UIResponder {
     }
 
     public static void commitAnimations() {
-        transf.commit();
-        transf = CoreTransf.normal();
+        // Late execution of commit, to make sure that animation delegates will bump against the instant transformation
+        CoreTransf current = transf;
+        transf = CoreTransf.instant();
+        current.commit();
     }
 
     public static void setAnimationStartDate(NSDate startTime) {
@@ -494,5 +498,29 @@ public class UIView extends UIResponder {
 
     public void drawRect(CGRect rect) {
         // Do nothing
+    }
+
+    public UIView hitTest(CGPoint point, UIEvent event) {
+        if (isUserInteractionEnabled() && !isHidden() && getAlpha() >= 0.1f) {
+            // do transformations here
+            CGRect frame = getFrame();
+            point = new CGPoint(point.x - frame.origin.x, point.y - frame.origin.y);
+
+            // Highest layer & highest Z-order
+            List<UIView> children = getSubviews();
+            for (int i = children.size() - 1; i >= 0; i--) {
+                UIView found = children.get(i).hitTest(point, event);
+                if (found != null)
+                    return found;
+            }
+            if (pointInside(point, event))
+                return this;
+        }
+        return null;
+    }
+
+    public boolean pointInside(CGPoint point, UIEvent event) {
+        CGRect frame = getFrame();
+        return !(point.x < 0 || point.y < 0 || point.x > frame.size.width - 1 || point.y > frame.size.height - 1);
     }
 }

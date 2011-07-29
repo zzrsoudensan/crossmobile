@@ -45,7 +45,7 @@ public class UILabel extends UIView {
 
             @Override
             public void exec() {
-                TextView tv = (TextView) __model();
+                TextView tv = (TextView) xm_model();
                 tv.setTextColor(Color.BLACK);
                 tv.setTypeface(LABELFONT.__Typeface());
                 tv.setTextSize(LABELFONT.__AndroidSize());
@@ -58,13 +58,13 @@ public class UILabel extends UIView {
 
             @Override
             public void exec() {
-                ((TextView) __model()).setText(string);
+                ((TextView) xm_model()).setText(string);
             }
         });
     }
 
     public String getText() {
-        return ((TextView) __model()).getText().toString();
+        return ((TextView) xm_model()).getText().toString();
     }
 
     public void setFont(final UIFont font) {
@@ -72,7 +72,7 @@ public class UILabel extends UIView {
 
             @Override
             public void exec() {
-                TextView tv = (TextView) __model();
+                TextView tv = (TextView) xm_model();
                 tv.setTypeface(font.__Typeface());
                 tv.setTextSize(font.__AndroidSize());
             }
@@ -80,24 +80,24 @@ public class UILabel extends UIView {
     }
 
     public UIFont getFont() {
-        TextView tv = (TextView) __model();
+        TextView tv = (TextView) xm_model();
         return new UIFont(tv.getTypeface(), tv.getTextSize());
     }
 
     public void setTextColor(UIColor color) {
-        ((TextView) __model()).setTextColor(color.getModelColor());
+        ((TextView) xm_model()).setTextColor(color.getModelColor());
     }
 
     public UIColor getTextColor() {
-        return new UIColor(((TextView) __model()).getTextColors().getDefaultColor());
+        return new UIColor(((TextView) xm_model()).getTextColors().getDefaultColor());
     }
 
     public final void setTextAlignment(int UITextAlignment) {
-        ((TextView) __model()).setGravity(org.xmlvm.iphone.UITextAlignment.alignmentToGravity(UITextAlignment));
+        ((TextView) xm_model()).setGravity(org.xmlvm.iphone.UITextAlignment.alignmentToGravity(UITextAlignment));
     }
 
     public int getTextAlignment() {
-        return UITextAlignment.gravityToAlignment(((TextView) __model()).getGravity());
+        return UITextAlignment.gravityToAlignment(((TextView) xm_model()).getGravity());
     }
 
     public int getLineBreakMode() {
@@ -136,9 +136,9 @@ public class UILabel extends UIView {
 
     private void redoShadow() {
         if (shadowOffset == null)
-            ((TextView) __model()).setShadowLayer(0, 0, 0, 0);
+            ((TextView) xm_model()).setShadowLayer(0, 0, 0, 0);
         else
-            ((TextView) __model()).setShadowLayer(1, shadowOffset.width, shadowOffset.height, shadowColor.getModelColor());
+            ((TextView) xm_model()).setShadowLayer(1, shadowOffset.width, shadowOffset.height, shadowColor.getModelColor());
     }
 
     public boolean isAdjustsFontSizeToFitWidth() {
