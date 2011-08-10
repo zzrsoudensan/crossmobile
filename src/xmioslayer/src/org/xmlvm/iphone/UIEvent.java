@@ -10,10 +10,10 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Jubler; if not, write to the Free Software
+ * along with CrossMobile; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
- *
  */
+
 package org.xmlvm.iphone;
 
 import static android.view.MotionEvent.*;
@@ -26,6 +26,8 @@ import org.crossmobile.ios2a.IOSView;
 
 public class UIEvent extends NSObject {
 
+    private static long last_tap_timestamp = 0;
+    private static int tapcount = 1;
     private HashSet<UITouch> touches;
     UITouch firsttouch;
 
@@ -34,6 +36,15 @@ public class UIEvent extends NSObject {
         int phase;
         switch (ev.getAction()) {
             case ACTION_DOWN:
+                
+                // Calculate tap count
+                long current_tap_timestamp = System.currentTimeMillis();
+                if (current_tap_timestamp - last_tap_timestamp < 800)
+                    tapcount++;
+                else
+                    tapcount = 1;
+                last_tap_timestamp = current_tap_timestamp;
+                
                 phase = Began;
                 break;
             case ACTION_MOVE:
@@ -54,8 +65,10 @@ public class UIEvent extends NSObject {
                     dispatcher.source,
                     phase,
                     System.currentTimeMillis() / 1000d,
+                    tapcount,
                     new CGPoint(IOSView.x2IOS((int) (0.5f + ev.getX(p))), IOSView.y2IOS((int) (0.5f + ev.getY(p) + deltaY))));
             touches.add(firsttouch);
+            // with this trick, the variable firsttouch will always hold the "first touch" event
         }
     }
 

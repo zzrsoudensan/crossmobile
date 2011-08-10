@@ -10,13 +10,12 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Jubler; if not, write to the Free Software
+ * along with CrossMobile; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
- *
  */
+
 package org.xmlvm.iphone;
 
-import android.app.Activity;
 import android.content.Context;
 import android.os.Build;
 import android.telephony.TelephonyManager;
@@ -34,7 +33,7 @@ public class UIDevice extends NSObject {
     private int userinterfaceidiom;
 
     private UIDevice() {
-        String device = System.getProperty("ios.device");
+        String device = System.getProperty("xm.device");
         if (device == null)
             device = "iphone";
         device = device.toLowerCase();
@@ -56,12 +55,12 @@ public class UIDevice extends NSObject {
 
     public String getUniqueIdentifier() {
         if (udid == null) {
-            Activity ac = MainActivity.current;
-            final TelephonyManager tm = (TelephonyManager) ac.getBaseContext().getSystemService(Context.TELEPHONY_SERVICE);
+            Context cx = MainActivity.current;
+            final TelephonyManager tm = (TelephonyManager) cx.getSystemService(Context.TELEPHONY_SERVICE);
             final String tmDevice, tmSerial, tmPhone, androidId;
             tmDevice = "" + tm.getDeviceId();
             tmSerial = "" + tm.getSimSerialNumber();
-            androidId = "" + android.provider.Settings.Secure.getString(ac.getContentResolver(), android.provider.Settings.Secure.ANDROID_ID);
+            androidId = "" + android.provider.Settings.Secure.getString(cx.getContentResolver(), android.provider.Settings.Secure.ANDROID_ID);
             UUID deviceUuid = new UUID(androidId.hashCode(), ((long) tmDevice.hashCode() << 32) | tmSerial.hashCode());
             udid = deviceUuid.toString();
         }
@@ -69,15 +68,15 @@ public class UIDevice extends NSObject {
     }
 
     public String getName() {
-        return "Android CrossMobile";
+        return "Android CrossMobile for " + Build.MODEL;
     }
 
     public String getSystemName() {
-        return "iOS";
+        return "Android";
     }
 
     public String getSystemVersion() {
-        return "4.2";
+        return Build.VERSION.RELEASE;
     }
 
     public String getModel() {

@@ -10,15 +10,16 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Jubler; if not, write to the Free Software
+ * along with CrossMobile; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
- *
  */
+
 package org.crossmobile.ios2a;
 
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.LightingColorFilter;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.drawable.Drawable;
@@ -78,11 +79,13 @@ public class GraphicsUtils {
     }
 
     public static Bitmap getTintedBitmap(Bitmap bm, float r, float g, float b) {
-        int[] colors = new int[bm.getWidth() * bm.getHeight()];
-        bm.getPixels(colors, 0, bm.getWidth(), 0, 0, bm.getWidth(), bm.getHeight());
-        for (int i = 0; i < colors.length; i++)
-            colors[i] = getTintedColor(colors[i], r, g, b);
-        return Bitmap.createBitmap(colors, bm.getWidth(), bm.getHeight(), Bitmap.Config.ARGB_8888);
+        Bitmap out = Bitmap.createBitmap(bm.getWidth(), bm.getHeight(), Bitmap.Config.ARGB_8888);
+        int color = 0xFF000000 + (int) (0xFF0000 * r) + (int) (0xFF00 * g) + (int) (0xFF * b);
+        Paint p = new Paint(color);
+        p.setColorFilter(new LightingColorFilter(color, 0));
+        Canvas c = new Canvas(out);
+        c.drawBitmap(bm, 0, 0, p);
+        return out;
     }
 
     public static int getTintedColor(int val, float r, float g, float b) {

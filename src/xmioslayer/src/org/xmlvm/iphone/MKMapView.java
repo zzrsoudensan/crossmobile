@@ -10,15 +10,16 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Jubler; if not, write to the Free Software
+ * along with CrossMobile; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
- *
  */
+
 package org.xmlvm.iphone;
 
 import android.app.Activity;
 import android.app.ActivityGroup;
 import android.app.LocalActivityManager;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Canvas;
 import android.graphics.drawable.Drawable;
@@ -315,7 +316,7 @@ public class MKMapView extends UIView {
     }
 
     @Override
-    View createModelObject(Activity activity) {
+    View createModelObject(Context cx) {
         currentID = "map" + (last_id++);
 
         /// This should be initialized guarandeed before the annotations object
@@ -332,11 +333,11 @@ public class MKMapView extends UIView {
          * It is strange though, although a new activity is launched for every map object, all
          * map objects have sunchronized views
          */
-        LocalActivityManager mng = ((ActivityGroup) activity).getLocalActivityManager();
+        LocalActivityManager mng = ((ActivityGroup) cx).getLocalActivityManager();
         mng.startActivity(currentID, new Intent(MAP_ACTIVITY));
         Activity cma = mng.getActivity(currentID);
         LifeCycle.register(cma);
-        MapView mv = new MapView(cma, System.getProperty("ios.map.apikey"));
+        MapView mv = new MapView(cma, System.getProperty("xm.map.apikey"));
         mv.getOverlays().add(annotations);
         return mv;
     }

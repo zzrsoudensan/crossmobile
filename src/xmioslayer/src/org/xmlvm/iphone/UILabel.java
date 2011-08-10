@@ -10,13 +10,13 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Jubler; if not, write to the Free Software
+ * along with CrossMobile; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
- *
  */
+
 package org.xmlvm.iphone;
 
-import android.app.Activity;
+import android.content.Context;
 import android.graphics.Color;
 import android.view.View;
 import android.widget.TextView;
@@ -150,7 +150,7 @@ public class UILabel extends UIView {
     }
 
     @Override
-    View createModelObject(Activity activity) {
-        return new TextView(activity);
+    View createModelObject(Context cx) {
+        return new TextView(cx);
     }
 }

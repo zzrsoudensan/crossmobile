@@ -10,13 +10,13 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Jubler; if not, write to the Free Software
+ * along with CrossMobile; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
- *
  */
+
 package org.xmlvm.iphone;
 
-import android.app.Activity;
+import android.content.Context;
 import android.graphics.drawable.ColorDrawable;
 import android.view.View;
 import android.widget.AdapterView;
@@ -34,6 +34,7 @@ public class UITableView extends UIScrollView {
     private IOSTableAdapter adapter;
     private UIColor separatorColor = UIColor.whiteColor;
     private float rowHeight = 30;
+    private boolean allowsSelection = true;
 
     public UITableView() {
         this(CGRect.Zero());
@@ -48,6 +49,7 @@ public class UITableView extends UIScrollView {
         adapter = new IOSTableAdapter(this);
         ((ListView) xm_model()).setOnItemClickListener(new OnItemClickListener() {
 
+            @Override
             public void onItemClick(AdapterView<?> av, View view, int position, long id) {
                 delegate.didSelectRowAtIndexPath(UITableView.this, new NSIndexPath(1, position));
             }
@@ -98,7 +100,7 @@ public class UITableView extends UIScrollView {
     }
 
     public void reloadRowsAtIndexPaths(ArrayList<NSIndexPath> indexPaths, int UITableViewRowAnimation) {
-        throw new ImplementationError();
+        NSLog.log("reloadRowsAtIndexPaths not yet implemented");
     }
 
     public void deselectRowAtIndexPath(NSIndexPath indexPath, boolean animation) {
@@ -127,11 +129,11 @@ public class UITableView extends UIScrollView {
     }
 
     public boolean isAllowsSelection() {
-        throw new ImplementationError();
+        return allowsSelection;
     }
 
     public void setAllowsSelection(boolean allowsSelection) {
-        throw new ImplementationError();
+        this.allowsSelection = allowsSelection;
     }
 
     public boolean isEditing() {
@@ -155,7 +157,7 @@ public class UITableView extends UIScrollView {
     }
 
     @Override
-    View createModelObject(Activity activity) {
-        return new ListView(activity);
+    View createModelObject(Context cx) {
+        return new ListView(cx);
     }
 }

@@ -10,36 +10,43 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Jubler; if not, write to the Free Software
+ * along with CrossMobile; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
- *
  */
+
 package org.xmlvm.iphone;
 
-import android.app.Activity;
+import android.content.Context;
 import android.view.View;
 import org.crossmobile.ios2a.ImplementationError;
 import java.util.Set;
 import org.crossmobile.ios2a.IOSView;
 import org.crossmobile.ios2a.MainActivity;
+import org.crossmobile.ios2a.UIRunner;
 
 public abstract class UIResponder extends NSObject {
 
-    private final IOSView base;
-    private final View model;
+    private IOSView base;
+    private View model;
 
     @SuppressWarnings("OverridableMethodCallInConstructor")
     public UIResponder() {
-        /* Create master */
-        base = createBaseObject(MainActivity.current);
-        /* Create pupil */
-        View cpupil = createModelObject(MainActivity.current);
-        if (cpupil == null)
-            model = base;
-        else {
-            model = cpupil;
-            base.addView(model);
-        }
+        UIRunner.runSynced(new UIRunner() {
+
+            @Override
+            public void exec() {
+                /* Create master */
+                base = createBaseObject(MainActivity.current);
+                /* Create pupil */
+                View cpupil = createModelObject(MainActivity.current);
+                if (cpupil == null)
+                    model = base;
+                else {
+                    model = cpupil;
+                    base.addView(model);
+                }
+            }
+        });
     }
 
     public void touchesBegan(Set<UITouch> touches, UIEvent event) {
@@ -88,11 +95,11 @@ public abstract class UIResponder extends NSObject {
         return base;
     }
 
-    IOSView createBaseObject(Activity activity) {
-        return new IOSView(activity);
+    IOSView createBaseObject(Context cx) {
+        return new IOSView(cx);
     }
 
-    View createModelObject(Activity activity) {
+    View createModelObject(Context cx) {
         return null;
     }
 }

@@ -10,10 +10,10 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Jubler; if not, write to the Free Software
+ * along with CrossMobile; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
- *
  */
+
 package org.xmlvm.iphone;
 
 import static org.xmlvm.iphone.UIControlEvent.*;
@@ -22,36 +22,36 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class UIControl extends UIView {
-    
+
     Set<EventDelegate> controldelegates;
     private boolean selected;
     private boolean enabled;
     private boolean highlighted;
     private boolean last_touch_inside = true;
-    
+
     public UIControl() {
         this(CGRect.Zero());
     }
-    
+
     public UIControl(CGRect rect) {
         super(rect);
     }
-    
+
     public boolean isSelected() {
         return selected;
     }
-    
+
     public void setSelected(boolean selected) {
         this.selected = selected;
     }
-    
+
     public void addTarget(UIControlDelegate delegate, int UIControlEvent) {
         // Lazy initialization of delegates
         if (controldelegates == null)
             controldelegates = new HashSet<EventDelegate>();
         controldelegates.add(new EventDelegate(UIControlEvent, delegate));
     }
-    
+
     public Set<UIControlDelegate> allTargets() {
         HashSet<UIControlDelegate> targets = new HashSet<UIControlDelegate>();
         if (controldelegates != null)
@@ -59,23 +59,23 @@ public class UIControl extends UIView {
                 targets.add(item.delegate);
         return targets;
     }
-    
+
     public boolean isEnabled() {
         return enabled;
     }
-    
+
     public void setEnabled(boolean enabled) {
         this.enabled = enabled;
     }
-    
+
     public boolean isHighlighted() {
         return highlighted;
     }
-    
+
     public void setHighlighted(boolean highlighted) {
         this.highlighted = highlighted;
     }
-    
+
     private void raiseEvent(int event) {
         if (controldelegates == null)
             return;
@@ -83,14 +83,14 @@ public class UIControl extends UIView {
             if ((item.event & event) > 0)
                 item.delegate.raiseEvent(this, event);
     }
-    
+
     @Override
     public void touchesBegan(Set<UITouch> touches, UIEvent event) {
         setHighlighted(true);
         last_touch_inside = true;
         raiseEvent(TouchDown);
     }
-    
+
     @Override
     public void touchesMoved(Set<UITouch> touches, UIEvent event) {
         if (pointInside(event.firsttouch.locationInView(this), event)) {
@@ -109,18 +109,18 @@ public class UIControl extends UIView {
             raiseEvent(TouchDragOutside);
         }
     }
-    
+
     @Override
     public void touchesEnded(Set<UITouch> touches, UIEvent event) {
         setHighlighted(false);
         raiseEvent(pointInside(event.firsttouch.locationInView(this), event) ? TouchUpInside : TouchUpOutside);
     }
-    
+
     static class EventDelegate {
 
         int event;
         UIControlDelegate delegate;
-        
+
         private EventDelegate(int event, UIControlDelegate delegate) {
             this.event = event;
             this.delegate = delegate;

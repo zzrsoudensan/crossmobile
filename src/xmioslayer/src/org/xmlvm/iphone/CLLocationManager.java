@@ -10,10 +10,10 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Jubler; if not, write to the Free Software
+ * along with CrossMobile; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
- *
  */
+
 package org.xmlvm.iphone;
 
 import android.content.Context;
@@ -53,6 +53,7 @@ public class CLLocationManager extends NSObject {
             LifeCycle.register(this);
         }
 
+        @Override
         public void onLocationChanged(Location lctn) {
             if (lctn != null) {
                 CLLocation newlocation = new CLLocation(lctn);
@@ -63,12 +64,15 @@ public class CLLocationManager extends NSObject {
             }
         }
 
+        @Override
         public void onStatusChanged(String string, int i, Bundle bundle) {
         }
 
+        @Override
         public void onProviderEnabled(String string) {
         }
 
+        @Override
         public void onProviderDisabled(String string) {
         }
     };

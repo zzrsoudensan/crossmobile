@@ -10,13 +10,12 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Jubler; if not, write to the Free Software
+ * along with CrossMobile; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
- *
  */
+
 package org.crossmobile.ios2a;
 
-import android.app.Activity;
 import android.content.Context;
 import android.view.View;
 import kankan.wheel.widget.OnWheelScrollListener;
@@ -57,18 +56,20 @@ public class SingleWheelView extends UIView {
     /* This method actually overrides the UIResponder method, but can not
      * be tagged as @Overrides due to packaging/private issues
      */
-    public View createModelObject(Activity activity) {
-        final WheelView view = new WheelView(activity);
+    public View createModelObject(Context cx) {
+        final WheelView view = new WheelView(cx);
         view.addScrollingListener(new OnWheelScrollListener() {
 
+            @Override
             public void onScrollingStarted(WheelView wheel) {
             }
 
+            @Override
             public void onScrollingFinished(WheelView wheel) {
                 rowHasChanged(view.getCurrentItem());
             }
         });
-        view.setViewAdapter(new SingleAdapter(activity));
+        view.setViewAdapter(new SingleAdapter(cx));
         return view;
     }
 

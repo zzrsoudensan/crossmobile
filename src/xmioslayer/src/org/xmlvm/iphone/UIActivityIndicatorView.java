@@ -10,13 +10,13 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Jubler; if not, write to the Free Software
+ * along with CrossMobile; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
- *
  */
+
 package org.xmlvm.iphone;
 
-import android.app.Activity;
+import android.content.Context;
 import android.view.View;
 import android.widget.ProgressBar;
 
@@ -31,8 +31,6 @@ public class UIActivityIndicatorView extends UIView {
 
     @SuppressWarnings("OverridableMethodCallInConstructor")
     public UIActivityIndicatorView(int UIActivityIndicatorViewStyle) {
-        ProgressBar bar = (ProgressBar) xm_model();
-        bar.setIndeterminate(true);
         setActivityIndicatorViewStyle(UIActivityIndicatorViewStyle);
     }
 
@@ -64,7 +62,9 @@ public class UIActivityIndicatorView extends UIView {
     }
 
     @Override
-    View createModelObject(Activity activity) {
-        return new ProgressBar(activity);
+    View createModelObject(Context cx) {
+        ProgressBar bar = new ProgressBar(cx);
+        bar.setIndeterminate(true);
+        return bar;
     }
 }

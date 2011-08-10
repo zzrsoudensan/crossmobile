@@ -10,10 +10,10 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Jubler; if not, write to the Free Software
+ * along with CrossMobile; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
- *
  */
+
 package org.xmlvm.iphone;
 
 import java.util.ArrayList;
@@ -147,7 +147,7 @@ public class UINavigationBar extends UIView {
             r = prompt.getFrame();
             r.origin.x = 20;
             r.origin.y = 0;
-            r.size.width = 150;
+            r.size.width = UIScreen.mainScreen().getApplicationFrame().size.width - 120;
             r.size.height = 20;
             prompt.setFrame(getFrame());
             addSubview(prompt);
@@ -158,7 +158,7 @@ public class UINavigationBar extends UIView {
             r = label.getFrame();
             r.origin.x = 0;
             r.origin.y = 0;
-            r.size.width = 320;
+            r.size.width = UIScreen.mainScreen().getApplicationFrame().size.width;
             r.size.height = 30;
             label.setFrame(r);
             addSubview(label);

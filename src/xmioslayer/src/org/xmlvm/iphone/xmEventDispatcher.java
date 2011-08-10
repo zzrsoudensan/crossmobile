@@ -10,10 +10,10 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Jubler; if not, write to the Free Software
+ * along with CrossMobile; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
- *
  */
+
 package org.xmlvm.iphone;
 
 import android.view.MotionEvent;
@@ -28,15 +28,11 @@ class xmEventDispatcher {
         this.source = source;
     }
 
-    void send(MotionEvent ev) {
-        send(new UIEvent(this, ev, false));
+    UIEvent createEvent(MotionEvent ev, boolean ignoreBar) {
+        return new UIEvent(this, ev, ignoreBar);
     }
 
-    void send(MotionEvent ev, boolean ignoreBar) {
-        send(new UIEvent(this, ev, ignoreBar));
-    }
-
-    void send(UIEvent event) {
+    void sendEvent(UIEvent event) {
         switch (event.firsttouch.phase) {
             /**
              * Send events to all responders or only to the first one?

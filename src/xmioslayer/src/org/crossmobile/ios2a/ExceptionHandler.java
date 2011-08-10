@@ -10,23 +10,24 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Jubler; if not, write to the Free Software
+ * along with CrossMobile; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
- *
  */
+
 package org.crossmobile.ios2a;
 
-import android.app.Activity;
+import android.content.Context;
 
 public class ExceptionHandler implements Thread.UncaughtExceptionHandler {
 
     private static final ExceptionHandler base = new ExceptionHandler();
     private Thread.UncaughtExceptionHandler system;
 
+    @Override
     @SuppressWarnings("CallToThreadDumpStack")
     public void uncaughtException(Thread thread, Throwable thrwbl) {
-        final Activity act = MainActivity.current;
-        if (act != null)  // Silence errors when activity is not active
+        final Context cx = MainActivity.current;
+        if (cx != null)  // Silence errors when activity is not active
             system.uncaughtException(thread, thrwbl);
         System.exit(10);
     }

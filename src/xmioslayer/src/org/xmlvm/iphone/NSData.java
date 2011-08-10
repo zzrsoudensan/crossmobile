@@ -10,10 +10,10 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Jubler; if not, write to the Free Software
+ * along with CrossMobile; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
- *
  */
+
 package org.xmlvm.iphone;
 
 import java.io.FileOutputStream;
@@ -100,6 +100,17 @@ public class NSData extends NSObject {
                 data = null;
         } else
             data = null;
+    }
+
+    public static NSData dataWithBytes(byte[] data, int length) {
+        byte[] fdata;
+        if (length >= data.length)
+            fdata = data;
+        else {
+            fdata = new byte[length];
+            System.arraycopy(data, 0, fdata, 0, length);
+        }
+        return new NSData(fdata);
     }
 
     public static NSData dataWithContentsOfFile(String path) {

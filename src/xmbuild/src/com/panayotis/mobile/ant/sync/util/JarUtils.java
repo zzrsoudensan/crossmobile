@@ -10,32 +10,32 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Jubler; if not, write to the Free Software
+ * along with CrossMobile; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
- *
  */
+
 package com.panayotis.mobile.ant.sync.util;
 
 import com.panayotis.mobile.ant.SynchronizeProject;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.List;
 import java.util.StringTokenizer;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
+import java.util.jar.JarOutputStream;
 import java.util.zip.ZipEntry;
 import org.apache.tools.ant.AntClassLoader;
 import org.apache.tools.ant.AntTypeDefinition;
+import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.ComponentHelper;
 import org.apache.tools.ant.Task;
 
 public class JarUtils {
-
-    public static InputStream getStreamFromJar(JarFile jarpath, JarPathEntry entry) throws IOException {
-        return jarpath.getInputStream(new ZipEntry(entry.home + "/" + entry.path + "/" + entry.name));
-    }
 
     public static JarFile getSelfJar(Task t) {
         Class classtype = SynchronizeProject.class;
@@ -55,7 +55,9 @@ public class JarUtils {
                     path = tok.nextToken();
                     if (path.toLowerCase().endsWith(jarname))
                         try {
-                            return new JarFile(path);
+                            File jarfile = new File(path);
+                            FileUtils.checkFileIsValid(jarfile, "JAR file");
+                            return new JarFile(jarfile);
                         } catch (IOException ex) {
                         }
                 }
@@ -64,12 +66,8 @@ public class JarUtils {
         return null;
     }
 
-    public static ArrayList<JarPathEntry> getListOfEntries(JarFile jarpath, String dirpath) {
-        String dirpathslashed;
-        if (!dirpath.endsWith("/"))
-            dirpathslashed = dirpath + "/";
-        else
-            dirpathslashed = dirpath;
+    public static List<JarPathEntry> getListOfEntries(JarFile jarpath, String dirpath) {
+        String dirpathslashed = dirpath.endsWith("/") ? dirpath : (dirpath.length() == 0 ? "" : dirpath + "/");
 
         int dirpathsize = dirpathslashed.length();
 
@@ -88,6 +86,64 @@ public class JarUtils {
         return res;
     }
 
+    public static void copySelfResources(SynchronizeProject task) throws BuildException {
+        JarFile self = JarUtils.getSelfJar(task);
+        if (self == null)
+            throw new BuildException("Unable to find xmbuild.jar.");
+        List<JarPathEntry> entries = JarUtils.getListOfEntries(self, "res");
+        if (entries == null || entries.isEmpty())
+            throw new BuildException("Unable to find 'res' directory inside xmbuild.jar");
+
+        File resdir = task.getResources();
+        InputStream in = null;
+        FileOutputStream out = null;
+        try {
+            for (JarPathEntry entry : entries) {
+                in = self.getInputStream(entry.getEntry());
+                File parent = new File(resdir, entry.path);
+                parent.mkdirs();
+                out = new FileOutputStream(new File(parent, entry.name));
+                FileUtils.copyStream(in, out);
+
+                // Required, since we re in a loop
+                FileUtils.closeStreams(in, out);
+                in = null;
+                out = null;
+            }
+        } catch (Exception ex) {
+            throw new BuildException(ex);
+        } finally {
+            FileUtils.closeStreams(in, out);
+        }
+    }
+
+    public static void copyPlugin(File infile, File outfile) throws BuildException {
+        JarFile injar = null;
+        JarOutputStream outjar = null;
+        try {
+            FileUtils.checkFileIsValid(infile, "Plugin");
+            System.out.println("Copy Plugin " + infile.getName());
+            injar = new JarFile(infile);
+            outjar = new JarOutputStream(new FileOutputStream(outfile));
+
+            for (JarPathEntry entry : getListOfEntries(injar, "")) // All files
+                if (!entry.path.startsWith("objc/")) {
+                    outjar.putNextEntry(new JarEntry(entry.toString()));
+                    FileUtils.copyStream(injar.getInputStream(entry.getEntry()), outjar);
+                    outjar.closeEntry();
+                }
+        } catch (IOException ex) {
+            throw new BuildException(ex);
+        } finally {
+            if (injar != null)
+                try {
+                    injar.close();
+                } catch (IOException ex) {
+                }
+            FileUtils.closeStreams(null, outjar);
+        }
+    }
+
     public static class JarPathEntry {
 
         private final String home;
@@ -98,6 +154,15 @@ public class JarUtils {
             this.home = home;
             this.path = path;
             this.name = name;
+        }
+
+        @Override
+        public String toString() {
+            return (home.length() == 0 ? "" : home + "/") + path + "/" + name;
+        }
+
+        public ZipEntry getEntry() {
+            return new ZipEntry(toString());
         }
     }
 }

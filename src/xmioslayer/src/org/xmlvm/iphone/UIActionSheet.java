@@ -10,13 +10,13 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Jubler; if not, write to the Free Software
+ * along with CrossMobile; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
- *
  */
+
 package org.xmlvm.iphone;
 
-import android.app.Activity;
+import android.content.Context;
 import android.view.View;
 import android.widget.Spinner;
 
@@ -43,9 +43,9 @@ public class UIActionSheet extends UIView {
     }
 
     @Override
-    View createModelObject(Activity activity) {
+    View createModelObject(Context cx) {
         // TODO : nothing works :)
-        Spinner spin = new Spinner(activity);
+        Spinner spin = new Spinner(cx);
 //        spin.setAdapter(ad);
 
         final String[] items = new String[]{"Item1", "Item2", "Item3", "Item4"};

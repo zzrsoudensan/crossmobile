@@ -10,10 +10,10 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Jubler; if not, write to the Free Software
+ * along with CrossMobile; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
- *
  */
+
 package org.xmlvm.iphone;
 
 import android.graphics.drawable.BitmapDrawable;
@@ -92,7 +92,7 @@ class xmButtonStates {
         if (states[state] != null && states[state].back != null)
             return states[state].back;
         if (adjustsImageWhenHighlighted && state == HighlightedIdx && states[NormalIdx].back != null) {
-            getIdx(HighlightedIdx).back = new UIImage(new BitmapDrawable(GraphicsUtils.getTintedBitmap(((BitmapDrawable) states[NormalIdx].back.getModel()).getBitmap(), .6f, 0.6f, 0.6f)));
+            getIdx(HighlightedIdx).back = UIImage.imageFromBitmap(GraphicsUtils.getTintedBitmap(((BitmapDrawable) states[NormalIdx].back.getModel()).getBitmap(), .6f, 0.6f, 0.6f), false);
             return states[HighlightedIdx].back;
         } else
             return states[NormalIdx].back;
@@ -111,7 +111,7 @@ class xmButtonStates {
         if (states[state] != null && states[state].fore != null)
             return states[state].fore;
         if (adjustsImageWhenHighlighted && state == HighlightedIdx && states[NormalIdx].fore != null) {
-            getIdx(HighlightedIdx).fore = new UIImage(new BitmapDrawable(GraphicsUtils.getTintedBitmap(((BitmapDrawable) states[NormalIdx].fore.getModel()).getBitmap(), .6f, 0.6f, 0.6f)));
+            getIdx(HighlightedIdx).fore = UIImage.imageFromBitmap(GraphicsUtils.getTintedBitmap(((BitmapDrawable) states[NormalIdx].fore.getModel()).getBitmap(), .6f, 0.6f, 0.6f), false);
             return states[HighlightedIdx].fore;
         } else
             return states[NormalIdx].fore;

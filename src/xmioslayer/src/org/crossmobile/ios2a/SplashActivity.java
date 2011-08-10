@@ -10,10 +10,10 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Jubler; if not, write to the Free Software
+ * along with CrossMobile; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
- *
  */
+
 package org.crossmobile.ios2a;
 
 import android.R;
@@ -29,9 +29,9 @@ public abstract class SplashActivity extends Activity {
         MainActivity.current = this;
         setContentView(getSplashResource());
         try {
-            System.getProperties().load(FileBridge.getInputFileStream(FileBridge.BUNDLEPREFIX + "/ios.properties"));
+            System.getProperties().load(FileBridge.getInputFileStream(FileBridge.BUNDLEPREFIX + "/crossmobile.properties"));
         } catch (Exception ex) {
-            LifeCycle.finishWithError("Not a valid CrossMobile application, missing ios.properties file", ex);
+            LifeCycle.finishWithError("Corrupted CrossMobile application, missing crossmobile.properties file", ex);
             return;
         }
     }
@@ -49,7 +49,7 @@ public abstract class SplashActivity extends Activity {
                     public void run() {
                         int wait = 1000;
                         try {
-                            wait = Integer.parseInt(System.getProperty("ios.splash.delay"));
+                            wait = Integer.parseInt(System.getProperty("xm.splash.delay"));
                             if (wait < 0)
                                 wait = 0;
                         } catch (NumberFormatException ex) {

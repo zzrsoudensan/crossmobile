@@ -10,10 +10,10 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Jubler; if not, write to the Free Software
+ * along with CrossMobile; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
- *
  */
+
 package org.xmlvm.iphone;
 
 import android.content.Intent;
@@ -27,10 +27,10 @@ import org.crossmobile.ios2a.MainActivity;
 
 public class UIApplication extends UIResponder {
 
+    private static UIApplication instance;
     List<UIWindow> windows;
     private boolean idleTimerDisabled;
     private UIApplicationDelegate delegate;
-    private static UIApplication instance;
     private UIWindow keyWindow;
     private int statusBarStyle;
     private boolean statusbarhidden = false;
@@ -134,7 +134,7 @@ public class UIApplication extends UIResponder {
             instance.getDelegate().applicationDidFinishLaunching(instance);
             instance.getDelegate().applicationDidBecomeActive(instance);
             if (instance.getKeyWindow() != null)
-                instance.getKeyWindow().doLayoutWithDelegates();
+                instance.getKeyWindow().doInitialLayoutWithDelegates();
         } catch (Throwable e) {
             throw new RuntimeException("Unable to launch CrossMobile application", e);
         }

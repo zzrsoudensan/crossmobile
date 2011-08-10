@@ -10,27 +10,34 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Jubler; if not, write to the Free Software
+ * along with CrossMobile; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
- *
- */package com.panayotis.mobile.ant.sync.util;
+ */
+
+package com.panayotis.mobile.ant.sync.util;
 
 import com.panayotis.mobile.ant.SynchronizeProject;
-import com.panayotis.mobile.ant.sync.util.JarUtils.JarPathEntry;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.Reader;
+import java.io.StringReader;
+import java.io.StringWriter;
+import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.StringTokenizer;
-import java.util.jar.JarFile;
 import org.apache.tools.ant.BuildException;
+import org.apache.tools.ant.Task;
 
 public class FileUtils {
 
@@ -41,6 +48,22 @@ public class FileUtils {
         this.task = task;
     }
 
+    public static List<File> getFileList(Task task, String items) {
+        ArrayList<File> result = new ArrayList<File>();
+        StringTokenizer tk = new StringTokenizer(items, ":");
+        while (tk.hasMoreTokens())
+            try {
+                String item = tk.nextToken();
+                File file = new File(item);
+                if (!file.isAbsolute())
+                    file = new File(task.getProject().getBaseDir(), item).getAbsoluteFile();
+                result.add(file.getCanonicalFile());
+            } catch (IOException ex) {
+            }
+        return result;
+    }
+
+    /* Probably use getFileList instead? What about the "/" character? */
     public List<File> getResourceList() {
         if (resourcelist == null) {
             resourcelist = new ArrayList<File>();
@@ -50,6 +73,10 @@ public class FileUtils {
                 File file = new File(item);
                 if (!file.isAbsolute())
                     file = new File(task.getProject().getBaseDir(), item).getAbsoluteFile();
+                try {
+                    file = file.getCanonicalFile();
+                } catch (IOException ex) {
+                }
                 if (item.endsWith("/"))
                     resourcelist.addAll(Arrays.asList(file.listFiles()));
                 else
@@ -99,8 +126,9 @@ public class FileUtils {
     }
 
     public static void copyFile(File inF, File outF) throws BuildException {
-        if (!(inF != null && outF != null && inF.isFile() && inF.canRead()))
-            throw new BuildException("Error while initializing files");
+        checkFileIsValid(inF, "Source");
+        if (outF == null)
+            throw new BuildException("Destination file should not be null");
         if (outF.isFile())
             delete(outF);
 
@@ -118,37 +146,7 @@ public class FileUtils {
         }
     }
 
-    public void copySelfResources() throws BuildException {
-        JarFile self = JarUtils.getSelfJar(task);
-        if (self == null)
-            throw new BuildException("Unable to find xmbuild.jar.");
-        ArrayList<JarPathEntry> entries = JarUtils.getListOfEntries(self, "res");
-        if (entries == null || entries.isEmpty())
-            throw new BuildException("Unable to find 'res' directory inside xmbuild.jar");
-
-        File resdir = task.getResources();
-        InputStream in = null;
-        FileOutputStream out = null;
-        try {
-            for (JarPathEntry entry : entries) {
-                in = JarUtils.getStreamFromJar(self, entry);
-                File parent = new File(resdir, entry.path);
-                parent.mkdirs();
-                out = new FileOutputStream(new File(parent, entry.name));
-                copyStream(in, out);
-
-                // Required, since we re in a loop
-                closeStreams(in, out);
-                in = null;
-                out = null;
-            }
-        } catch (Exception ex) {
-            closeStreams(in, out);
-            throw new BuildException(ex);
-        }
-    }
-
-    private static void copyStream(InputStream in, OutputStream out) throws IOException {
+    public static void copyStream(InputStream in, OutputStream out) throws IOException {
         if (in != null && out != null) {
             byte buffer[] = new byte[1024];
             int length = 0;
@@ -157,7 +155,16 @@ public class FileUtils {
         }
     }
 
-    private static void closeStreams(InputStream in, OutputStream out) {
+    public static void copyReaders(Reader in, Writer out) throws IOException {
+        if (in != null && out != null) {
+            char buffer[] = new char[1024];
+            int length = 0;
+            while ((length = in.read(buffer)) > 0)
+                out.write(buffer, 0, length);
+        }
+    }
+
+    public static void closeStreams(InputStream in, OutputStream out) {
         if (in != null)
             try {
                 in.close();
@@ -189,5 +196,53 @@ public class FileUtils {
                 copyInSync(item, new File(target, item.getName()));
         } else if (source.length() != target.length())
             copyFile(source, target);
+    }
+
+    public static void checkFileIsValid(File test, String type) throws BuildException {
+        if (test == null)
+            throw new BuildException(type + " file should not be null");
+        if (!test.isFile())
+            throw new BuildException(type + " '" + test.getPath() + "' is not a file");
+        if (!test.canRead())
+            throw new BuildException(type + " file '" + test.getPath() + "' is not readable");
+    }
+
+    public static String readFile(File input) throws BuildException {
+        if (input == null)
+            throw new BuildException("Input file not defined");
+        StringWriter out = new StringWriter();
+        Reader in = null;
+        try {
+            in = new InputStreamReader(new FileInputStream(input), "UTF-8");
+            copyReaders(in, out);
+            return out.toString();
+        } catch (Exception ex) {
+            throw new BuildException(ex);
+        } finally {
+            if (in != null)
+                try {
+                    in.close();
+                } catch (IOException ex) {
+                }
+        }
+    }
+
+    public static void writeFile(File output, String data) throws BuildException {
+        if (output == null)
+            throw new BuildException("Input file not defined");
+        StringReader in = new StringReader(data == null ? "" : data);
+        Writer out = null;
+        try {
+            out = new OutputStreamWriter(new FileOutputStream(output), "UTF-8");
+            copyReaders(in, out);
+        } catch (Exception ex) {
+            throw new BuildException(ex);
+        } finally {
+            if (out != null)
+                try {
+                    out.close();
+                } catch (IOException ex) {
+                }
+        }
     }
 }

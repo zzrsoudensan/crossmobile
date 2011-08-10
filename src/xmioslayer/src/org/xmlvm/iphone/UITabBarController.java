@@ -10,10 +10,10 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Jubler; if not, write to the Free Software
+ * along with CrossMobile; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
- *
  */
+
 package org.xmlvm.iphone;
 
 import java.util.ArrayList;
@@ -30,7 +30,7 @@ public class UITabBarController extends UIViewController {
     public UITabBarController() {
         super();
         delegate = null;
-        tabBar = new UITabBar(new CGRect(0, 0, 320, 49));
+        tabBar = new UITabBar(new CGRect(0, 0, UIScreen.mainScreen().getApplicationFrame().size.width, 49));
         tabBar.tbcontrol = this;
         viewControllers = null;
         customizableViewControllers = null;

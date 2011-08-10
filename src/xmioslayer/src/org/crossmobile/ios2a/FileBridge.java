@@ -10,10 +10,10 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Jubler; if not, write to the Free Software
+ * along with CrossMobile; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
- *
  */
+
 package org.crossmobile.ios2a;
 
 import android.graphics.Bitmap;
@@ -35,6 +35,40 @@ public class FileBridge {
     private static final int RP_length = RESOURCEPREFIX.length();
     public static final String BUNDLEPREFIX = "file:///android_asset";
     private static final int BP_length = BUNDLEPREFIX.length() + 1;// Take care of the "/" character at the end of the pathname
+    //
+    // Should not directly use these variables, since it is important to create some directories first.
+    // Use instead the getTemporaryLocation() and getUserLocation() instead
+    private static final File userlocation = new File(MainActivity.current.getFilesDir().getPath());
+    private static final File templocation = new File(userlocation, "/temp");
+    //
+    public static final String[] DEFAULTPATHS = {
+        null,
+        "/Applications",
+        "/Applications/Demos",
+        "/Developer/Applications",
+        "/Applications/Utilities",
+        "/Library",
+        "/Developer",
+        null,
+        "/Library/Documentation",
+        "/Documents",
+        null,
+        "/Library/Autosave Information",
+        "/Desktop",
+        "/Library/Caches",
+        "/Library/Application Support",
+        "/Downloads",
+        "/Library/Input Methods",
+        "/Movies",
+        "/Music",
+        "/Pictures",
+        null,
+        "/Public",
+        "/Library/PreferencePanes"};
+
+    public static boolean isInReadonlyFilesystem(String name) {
+        return name.startsWith(RESOURCEPREFIX) || name.startsWith(BUNDLEPREFIX);
+    }
 
     public static Bitmap loadBitmap(String name) {
 
@@ -168,5 +202,20 @@ public class FileBridge {
             } catch (IOException ex) {
             }
         }
+    }
+
+    public static String getTemporaryLocation() {
+        templocation.mkdirs();
+        return templocation.getAbsolutePath();
+    }
+
+    public static void cleanTemporaryLocation() {
+        deleteRecursive(templocation);
+    }
+
+    public static String getUserLocation() {
+        new File(userlocation + DEFAULTPATHS[org.xmlvm.iphone.NSSearchPathDirectory.Document]).mkdirs();
+        new File(userlocation + DEFAULTPATHS[org.xmlvm.iphone.NSSearchPathDirectory.Caches]).mkdirs();
+        return userlocation.getAbsolutePath();
     }
 }

@@ -10,10 +10,10 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Jubler; if not, write to the Free Software
+ * along with CrossMobile; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
- *
  */
+
 package org.crossmobile.ios2a;
 
 import android.app.Activity;
@@ -27,6 +27,7 @@ import java.util.HashSet;
 import java.util.Set;
 import org.xmlvm.iphone.NSLog;
 import org.xmlvm.iphone.NSTimer;
+import org.xmlvm.iphone.UIGraphics;
 
 public class LifeCycle {
 
@@ -50,6 +51,10 @@ public class LifeCycle {
         registry.remove(timer);
     }
 
+    public static void onCreate() {
+        FileBridge.cleanTemporaryLocation();
+    }
+
     public static void onStop() {
         for (NSTimer timer : registry)
             timer.invalidate();
@@ -70,12 +75,25 @@ public class LifeCycle {
                     manager.removeUpdates(item.get());
             } catch (Exception e) {
             }
+
+        // Clean up cache
+        FileBridge.cleanTemporaryLocation();
+
+        // remove all graphics contexts (usually is empty, but just in case)
+        try {
+            while (true)
+                UIGraphics.popContext();
+        } catch (Exception e) {
+        }
+
+        System.exit(0); // Bad but... required
     }
 
     public static void finishWithError(final String error, final Throwable throwable) {
         final Activity activity = MainActivity.current;
         activity.runOnUiThread(new Runnable() {
 
+            @Override
             public void run() {
                 if (error != null) {
                     NSLog.log(error);

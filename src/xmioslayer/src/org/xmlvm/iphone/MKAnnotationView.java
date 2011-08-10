@@ -10,14 +10,14 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Jubler; if not, write to the Free Software
+ * along with CrossMobile; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
- *
  */
+
 package org.xmlvm.iphone;
 
-import android.app.Activity;
 import android.app.Dialog;
+import android.content.Context;
 import android.graphics.drawable.Drawable;
 import android.view.MotionEvent;
 import android.view.ViewGroup;
@@ -74,6 +74,7 @@ public class MKAnnotationView extends UIView {
         close.setImage(UIImage.imageWithContentsOfFile(FileBridge.RESOURCEPREFIX + "close"), UIControlState.Normal);
         close.addTarget(new UIControlDelegate() {
 
+            @Override
             public void raiseEvent(UIControl sender, int UIControlEvent) {
                 if (dialogref == null)
                     return;
@@ -237,12 +238,12 @@ public class MKAnnotationView extends UIView {
     }
 
     @Override
-    IOSView createBaseObject(Activity activity) {
-        return new IOSView(activity) {
+    IOSView createBaseObject(Context cx) {
+        return new IOSView(cx) {
 
             @Override
             public boolean dispatchTouchEvent(MotionEvent ev) {
-                dispatcher.send(ev, true);
+                dispatcher.sendEvent(dispatcher.createEvent(ev, true));
                 return super.dispatchTouchEvent(ev);   // For other native widgets to work
             }
         };

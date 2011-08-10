@@ -10,10 +10,10 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Jubler; if not, write to the Free Software
+ * along with CrossMobile; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
- *
  */
+
 package org.xmlvm.iphone;
 
 import java.util.ArrayList;
@@ -37,7 +37,7 @@ public class UINavigationController extends UIViewController {
         super();
         toolbarHidden = true;
         navigationBarHidden = false;
-        navigationBar = new UINavigationBar(new CGRect(0, 0, 320, 40));
+        navigationBar = new UINavigationBar(new CGRect(0, 0, UIScreen.mainScreen().getApplicationFrame().size.width, 40));
         navigationBar.nbcontroller = this;
         toolbar = new UIToolbar();
         items = new ArrayList<UIViewController>();

@@ -10,14 +10,15 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Jubler; if not, write to the Free Software
+ * along with CrossMobile; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
- *
  */
+
 package org.xmlvm.iphone;
 
-import android.app.Activity;
+import android.content.Context;
 import android.view.MotionEvent;
+import android.view.ViewGroup;
 import org.crossmobile.ios2a.IOSView;
 import org.crossmobile.ios2a.ImplementationError;
 import org.crossmobile.ios2a.MainActivity;
@@ -79,7 +80,7 @@ public class UIWindow extends UIView {
     }
 
     public void sendEvent(UIEvent event) {
-        dispatcher.send(event);
+        dispatcher.sendEvent(event);
     }
 
     public void makeKeyAndVisible() {
@@ -128,7 +129,7 @@ public class UIWindow extends UIView {
     void changeParent(UIView newParent, int index) {
     }
 
-    void doLayoutWithDelegates() {
+    void doInitialLayoutWithDelegates() {
         updateStatusBarDelta();
         if (rootViewController != null) {
             if (rootViewController.getView().getSuperview() != this)
@@ -136,7 +137,13 @@ public class UIWindow extends UIView {
             rootViewController.doLayoutWithDelegates(false);
             rootViewController.viewWillAppear(false);
         }
-        MainActivity.current.setContentView(xm_base());
+        try {
+            if (xm_base().getParent() != null)
+                ((ViewGroup) xm_base().getParent()).removeView(xm_base());
+            MainActivity.current.setContentView(xm_base());
+        } catch (Exception ex) {    // to be sure when resuming the application
+            NSLog.log(ex);
+        }
         if (rootViewController != null)
             rootViewController.viewDidAppear(false);
     }
@@ -146,12 +153,12 @@ public class UIWindow extends UIView {
     }
 
     @Override
-    IOSView createBaseObject(Activity activity) {
+    IOSView createBaseObject(Context activity) {
         return new IOSView(activity) {
 
             @Override
             public boolean dispatchTouchEvent(MotionEvent ev) {
-                dispatcher.send(ev);
+                sendEvent(dispatcher.createEvent(ev, false));
                 return super.dispatchTouchEvent(ev);   // For other native widgets to work
             }
         };

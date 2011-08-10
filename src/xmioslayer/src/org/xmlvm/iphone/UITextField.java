@@ -10,13 +10,12 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Jubler; if not, write to the Free Software
+ * along with CrossMobile; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
- *
  */
+
 package org.xmlvm.iphone;
 
-import android.app.Activity;
 import android.content.Context;
 import android.text.Editable;
 import android.text.method.PasswordTransformationMethod;
@@ -209,8 +208,8 @@ public class UITextField extends UIView {
     }
 
     @Override
-    View createModelObject(Activity activity) {
-        EditText text = new EditText(activity);
+    View createModelObject(Context cx) {
+        EditText text = new EditText(cx);
         text.setKeyListener(new TextKeyListener(TextKeyListener.Capitalize.NONE, true) {
 
             @Override

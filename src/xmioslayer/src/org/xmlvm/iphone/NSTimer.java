@@ -10,21 +10,21 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Jubler; if not, write to the Free Software
+ * along with CrossMobile; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
- *
  */
+
 package org.xmlvm.iphone;
 
 import org.crossmobile.ios2a.MainActivity;
 import org.crossmobile.ios2a.LifeCycle;
 
-public class NSTimer extends NSObject {
+public class NSTimer<A> extends NSObject {
 
     private final Thread thread;
 
     @SuppressWarnings({"CallToThreadStartDuringObjectConstruction", "LeakingThisInConstructor"})
-    private NSTimer(final float timerInterval, final NSTimerDelegate target, final Object userInfo, final boolean repeats) {
+    private NSTimer(final float timerInterval, final NSTimerDelegate<A> target, final A userInfo, final boolean repeats) {
         final Runnable tick = new Runnable() {
 
             public void run() {
@@ -53,8 +53,8 @@ public class NSTimer extends NSObject {
         thread.start();
     }
 
-    public static NSTimer scheduledTimerWithTimeInterval(float seconds, NSTimerDelegate target, Object userinfo, boolean repeats) {
-        return new NSTimer(seconds, target, userinfo, repeats);
+    public static <A> NSTimer scheduledTimerWithTimeInterval(float seconds, NSTimerDelegate<A> target, A userinfo, boolean repeats) {
+        return new NSTimer<A>(seconds, target, userinfo, repeats);
     }
 
     public void invalidate() {

@@ -10,63 +10,94 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Jubler; if not, write to the Free Software
+ * along with CrossMobile; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
- *
  */
+
 package org.xmlvm.iphone;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import org.crossmobile.ios2a.ImplementationError;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.lang.ref.WeakReference;
 import java.util.HashMap;
+import java.util.Random;
 import org.crossmobile.ios2a.FileBridge;
 
+/**
+ * UIImage does not hold a reference of a Bitmap dataset. For this reason is a
+ * list of weak references of images which can be loaded at any time from the
+ * file system. In case a drawable is presented as a source for the image, then
+ * a copy of the bitmap is saved to a cached directory 
+ */
 public class UIImage extends NSObject {
 
-    private static HashMap<String, WeakReference<Bitmap>> cache = new HashMap<String, WeakReference<Bitmap>>();
+    private static final String TEMPIMAGEPREFIX = "/.uiimage.bitmaps/";
+    private static final HashMap<String, WeakReference<Bitmap>> cache = new HashMap<String, WeakReference<Bitmap>>();
+    private static final Random random = new Random(System.currentTimeMillis());
     //
-    private BitmapDrawable image;
+    private String path;
 
-    private UIImage(byte[] data) {
-        this(data == null ? (Bitmap) null : BitmapFactory.decodeByteArray(data, 0, data.length));
+    /* @param path the path of this image - the image should already be there
+     * @param bm the bitmap in case it exists already
+     * @param disposable if no copy of the bitmap should be kept (i.e. is candidate for recycle
+     * @throws IOException  if the image is not found
+     */
+    UIImage(String path, Bitmap bm, boolean disposable) throws IOException {
+        this.path = path;
+        if (FileBridge.isInReadonlyFilesystem(path) && cache.containsKey(path)) // The file was attempted to loaded before and it is safe in the readonly filesystem
+            return;
+        if (bm == null)
+            bm = FileBridge.loadBitmap(path);
+        if (bm == null)
+            throw new IOException("Unable to load bitmap");
+        else
+            cache.put(path, new WeakReference<Bitmap>(disposable ? null : bm));
     }
 
-    private UIImage(Bitmap bitmap) {
-        this(bitmap == null ? (BitmapDrawable) null : new BitmapDrawable(bitmap));
-    }
-
-    UIImage(BitmapDrawable image) {
-        this.image = image;
-    }
-
-    public static UIImage imageWithContentsOfFile(String filename) {
-        // Check in cache
-        WeakReference<Bitmap> wimg = cache.get(filename);
-        if (wimg != null && wimg.get() != null)
-            return new UIImage(wimg.get());
-
-        // Load image
-        Bitmap bm = FileBridge.loadBitmap(filename);
-
-        // Bitmap not found
+    static UIImage imageFromBitmap(Bitmap bm, boolean disposable) {
         if (bm == null)
             return null;
-
-        // store image in cache
-        cache.put(filename, new WeakReference<Bitmap>(bm));
-        return new UIImage(bm);
+        String fname = getRandomFilename();
+        FileOutputStream out = null;
+        try {
+            out = new FileOutputStream(fname);
+            bm.compress(Bitmap.CompressFormat.PNG, 100, out);   // save image
+            return new UIImage(fname, bm, disposable);
+        } catch (IOException ex) {
+            NSLog.log(ex);
+            return null;
+        } finally {
+            if (out != null)
+                try {
+                    out.close();
+                } catch (IOException ex) {
+                }
+        }
     }
 
     public static UIImage imageNamed(String filename) {
-        return imageWithContentsOfFile(FileBridge.BUNDLEPREFIX + "/" + filename);
+        return imageWithContentsOfFile(FileBridge.BUNDLEPREFIX + "/" + filename);   // These images are always cached!
     }
 
     public static UIImage imageWithData(NSData data) {
-        UIImage img = new UIImage(data.getBytes());
-        return img.image != null ? img : null;
+        String fname = getRandomFilename();
+        data.writeToFile(fname, false);
+        return imageWithContentsOfFile(fname);
+    }
+
+    public static UIImage imageWithContentsOfFile(String filename) {
+        try {
+            return new UIImage(filename, null, false);
+        } catch (IOException ex) {
+            return null;
+        }
     }
 
     public UIImage stretchableImage(int leftCapWidth, int topCapHeight) {
@@ -74,8 +105,13 @@ public class UIImage extends NSObject {
         return this;
     }
 
+    private static String getRandomFilename() {
+        new File(Foundation.NSTemporaryDirectory() + TEMPIMAGEPREFIX).mkdirs();
+        return Foundation.NSTemporaryDirectory() + TEMPIMAGEPREFIX + Integer.toHexString(random.nextInt());
+    }
+
     public CGImage getCGImage() {
-        return new CGImage(image.getBitmap());
+        return new CGImage(getModel().getBitmap());
     }
 
     public void drawInRect(CGRect rect) {
@@ -87,9 +123,7 @@ public class UIImage extends NSObject {
     }
 
     public CGSize getSize() {
-        if (image == null)
-            return new CGSize(0, 0);
-        Bitmap bm = image.getBitmap();
+        Bitmap bm = getModel().getBitmap();
         return new CGSize(bm.getWidth(), bm.getHeight());
     }
 
@@ -98,14 +132,48 @@ public class UIImage extends NSObject {
     }
 
     public NSData PNGRepresentation() {
-        throw new ImplementationError();
+        if (path.startsWith(Foundation.NSTemporaryDirectory() + TEMPIMAGEPREFIX)) {
+            ByteArrayOutputStream out = null;
+            try {
+                out = new ByteArrayOutputStream();
+                FileBridge.copyStreams(new FileInputStream(path), out);
+                return new NSData(out.toByteArray());
+            } catch (FileNotFoundException ex) {
+                throw new NullPointerException("Unable to retrieve active UIImage " + path);
+            } finally {
+                if (out != null)
+                    try {
+                        out.close();
+                    } catch (IOException ex) {
+                    }
+            }
+        }
+        return getImageRepresentation(Bitmap.CompressFormat.PNG, 1);
     }
 
     public NSData JPEGRepresentation(float compressionQuality) {
-        throw new ImplementationError();
+        return getImageRepresentation(Bitmap.CompressFormat.JPEG, compressionQuality);
+    }
+
+    private NSData getImageRepresentation(Bitmap.CompressFormat compress, float quality) {
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        getModel().getBitmap().compress(compress, (int) (quality * 100), out);
+        NSData result = new NSData(out.toByteArray());
+        try {
+            out.close();
+        } catch (IOException ex) {
+        }
+        return result;
     }
 
     BitmapDrawable getModel() {
-        return image;
+        Bitmap bm = cache.get(path).get();
+        if (bm == null) {
+            bm = FileBridge.loadBitmap(path);
+            if (bm == null)
+                throw new NullPointerException("Unable to retrieve active UIImage " + path);
+            cache.put(path, new WeakReference<Bitmap>(bm));
+        }
+        return new BitmapDrawable(bm);
     }
 }

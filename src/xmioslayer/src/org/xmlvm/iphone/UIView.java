@@ -10,10 +10,10 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Jubler; if not, write to the Free Software
+ * along with CrossMobile; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
- *
  */
+
 package org.xmlvm.iphone;
 
 import static org.xmlvm.iphone.UIViewContentMode.*;
@@ -40,6 +40,7 @@ public class UIView extends UIResponder {
     private int tag;
     UIViewController controller;    // This variable is used in MainActivity to support hardware back button
     private int contentMode;
+    private CALayer layer;
 
     public UIView() {
         this(CGRect.Zero());
@@ -69,8 +70,10 @@ public class UIView extends UIResponder {
     }
 
     public CGRect getBounds() {
-        CGRect frame = getFrame();
-        return new CGRect(0, 0, frame.size.width, frame.size.height);
+        CGRect bounds = getFrame();
+        bounds.origin.x = 0;
+        bounds.origin.y = 0;
+        return bounds;
     }
 
     public void setBounds(CGRect rect) {
@@ -87,7 +90,7 @@ public class UIView extends UIResponder {
             @Override
             public void exec() {
                 UIView.this.background = col;
-                transf.setBackgroundColor(xm_base(), col.getModelDrawable(), col.getModelColor());
+                transf.setBackgroundColor(xm_base(), col == null ? null : col.getModelDrawable(), col == null ? 0 : col.getModelColor());
             }
         });
     }
@@ -411,7 +414,11 @@ public class UIView extends UIResponder {
     }
 
     public CALayer getLayer() {
-        throw new ImplementationError();
+        if (layer == null) {
+            layer = new CALayer();
+            layer.setDelegate(this);
+        }
+        return layer;
     }
 
     public int getAutoresizingMask() {
@@ -504,7 +511,10 @@ public class UIView extends UIResponder {
         if (isUserInteractionEnabled() && !isHidden() && getAlpha() >= 0.1f) {
             // do transformations here
             CGRect frame = getFrame();
-            point = new CGPoint(point.x - frame.origin.x, point.y - frame.origin.y);
+            float x = point.x - frame.origin.x;
+            float y = point.y - frame.origin.y;
+
+            point = new CGPoint(x, y);
 
             // Highest layer & highest Z-order
             List<UIView> children = getSubviews();

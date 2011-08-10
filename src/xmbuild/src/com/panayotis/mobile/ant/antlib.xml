@@ -1,4 +1,6 @@
 <?xml version="1.0"?>
 <antlib>
-    <typedef name="amanifest" classname="com.panayotis.mobile.ant.SynchronizeProject" onerror="fail"/>
+    <typedef name="xmupdate" classname="com.panayotis.mobile.ant.SynchronizeProject" onerror="fail"/>
+    <typedef name="xmlibs" classname="com.panayotis.mobile.ant.AttachedLibraries" onerror="fail"/>
+    <typedef name="xmprop" classname="com.panayotis.mobile.ant.PropertiesCreator" onerror="fail"/>
 </antlib>

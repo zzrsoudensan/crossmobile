@@ -10,14 +10,15 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Jubler; if not, write to the Free Software
+ * along with CrossMobile; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
- *
  */
+
 package com.panayotis.mobile.ant;
 
 import com.panayotis.mobile.ant.sync.util.AndroidUtils;
 import com.panayotis.mobile.ant.sync.util.FileUtils;
+import com.panayotis.mobile.ant.sync.util.JarUtils;
 import com.panayotis.mobile.ant.sync.util.Templates;
 import java.io.File;
 import org.apache.tools.ant.BuildException;
@@ -115,7 +116,7 @@ public class SynchronizeProject extends Task {
         autils.createActivities(packname, classname);
         autils.updateAndroidManifest(packname, classname, debuggable);
         autils.createAssets(futils.getResourceList(), asset);
-        futils.copySelfResources();
+        JarUtils.copySelfResources(this);
         futils.copyImage("Icon", Templates.ICONDRAWABLE);
         futils.copyImage("Default", Templates.SPLASHDRAWABLE);
     }

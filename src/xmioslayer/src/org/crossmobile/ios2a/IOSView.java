@@ -10,20 +10,23 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Jubler; if not, write to the Free Software
+ * along with CrossMobile; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
- *
  */
+
 package org.crossmobile.ios2a;
 
 import android.app.Activity;
 import org.crossmobile.ios2a.transf.RichTransformation;
 import android.content.Context;
+import android.graphics.Canvas;
 import android.graphics.Rect;
+import android.graphics.RectF;
 import android.util.DisplayMetrics;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
+import android.view.animation.Animation;
 import android.view.animation.Transformation;
 import android.widget.AbsListView;
 import org.xmlvm.iphone.CGAffineTransform;
@@ -145,12 +148,197 @@ public class IOSView extends ViewGroup implements IOSChild {
         setMeasuredDimension(resolveSize(maxWidth, widthMeasureSpec),
                 resolveSize(maxHeight, heightMeasureSpec));
     }
+    Transformation childTransformation = new Transformation();
+    RectF invalidateRegion = new RectF();
+
+    //    private final RectF tempRegion = new RectF() ;
+//    private final RectF previousRegion = new RectF() ;
+    public static void getInvalidateRegion(int left, int top, int right, int bottom, RectF invalidate, Transformation transformation) {
+        invalidate.set(left, top, right, bottom);
+        transformation.getMatrix().mapRect(invalidate);
+        invalidate.inset(-1.0f, -1.0f);
+//        tempRegion.set(invalidate);
+//        invalidate.union(previousRegion);
+//
+//        previousRegion.set(tempRegion);
+//
+//        final Transformation tempTransformation = mTransformation;
+//        final Transformation previousTransformation = mPreviousTransformation;
+//
+//        tempTransformation.set(transformation);
+//        transformation.set(previousTransformation);
+//        previousTransformation.set(tempTransformation);
+    }
+
+    @Override
+    protected boolean drawChild(Canvas canvas, View child, long drawingTime) {
+//        if (true)
+//            return super.drawChild(canvas, child, drawingTime);
+
+        boolean more = false;
+
+        final int cl = child.getLeft();
+        final int ct = child.getTop();
+        final int cr = child.getRight();
+        final int cb = child.getBottom();
+
+        childTransformation.clear();
+
+
+        Transformation transformToApply = null;
+        final IOSAnimation a = (IOSAnimation) child.getAnimation();
+        boolean concatMatrix = false;
+
+        if (a != null) {
+            final RectF region = invalidateRegion;
+
+            final boolean initialized = a.isInitialized();
+            if (!initialized)
+                a.initialize(cr - cl, cb - ct, getWidth(), getHeight());
+
+
+            more = a.getTransformation(drawingTime, childTransformation);
+            transformToApply = childTransformation;
+
+            concatMatrix = a.willChangeTransformationMatrix();
+
+            if (more)
+                if (!a.willChangeBounds())
+                    invalidate(cl, ct, cr, cb);
+                else {
+                    getInvalidateRegion(0, 0, cr - cl, cb - ct, region, transformToApply);
+
+                    // The child need to draw an animation, potentially offscreen, so
+                    // make sure we do not cancel invalidate requests
+                    //           mPrivateFlags |= DRAW_ANIMATION;
+
+                    final int left = cl + (int) region.left;
+                    final int top = ct + (int) region.top;
+                    invalidate(left, top, left + (int) region.width(), top + (int) region.height());
+                }
+        } else {
+
+            final boolean hasTransform = getChildStaticTransformation(child, childTransformation);
+            if (hasTransform) {
+                final int transformType = childTransformation.getTransformationType();
+                transformToApply = transformType != Transformation.TYPE_IDENTITY ? childTransformation : null;
+                concatMatrix = (transformType & Transformation.TYPE_MATRIX) != 0;
+
+
+                final RectF region = invalidateRegion;
+                getInvalidateRegion(0, 0, cr - cl, cb - ct, region, transformToApply);
+                final int left = cl + (int) region.left;
+                final int top = ct + (int) region.top;
+                invalidate(left, top, left + (int) region.width(), top + (int) region.height());
+
+            }
+        }
+
+        // Sets the flag as early as possible to allow draw() implementations
+        // to call invalidate() successfully when doing animations
+//        child.mPrivateFlags |= DRAWN;
+//
+//        if (!concatMatrix && canvas.quickReject(cl, ct, cr, cb, Canvas.EdgeType.BW)
+//                && (child.mPrivateFlags & DRAW_ANIMATION) == 0)
+//            return more;
+
+        child.computeScroll();
+
+        final int sx = child.getScrollX();
+        final int sy = child.getScrollY();
+
+//        boolean scalingRequired = false;
+//        Bitmap cache = child.getDrawingCache(true);
+
+//        if ((flags & FLAG_CHILDREN_DRAWN_WITH_CACHE) == FLAG_CHILDREN_DRAWN_WITH_CACHE
+//                || (flags & FLAG_ALWAYS_DRAWN_WITH_CACHE) == FLAG_ALWAYS_DRAWN_WITH_CACHE) {
+//            if (mAttachInfo != null)
+//                scalingRequired = mAttachInfo.mScalingRequired;
+//        }
+
+
+        final int restoreTo = canvas.save();
+        canvas.translate(cl - sx, ct - sy);
+
+        float alpha = 1.0f;
+
+        if (transformToApply != null) {
+//            System.out.print("YES -> ");
+            if (concatMatrix) {
+                int transX = -sx;
+                int transY = -sy;
+                // Undo the scroll translation, apply the transformation matrix,
+                // then redo the scroll translate to get the correct result.
+                canvas.translate(-transX, -transY);
+                canvas.concat(transformToApply.getMatrix());
+                canvas.translate(transX, transY);
+            }
+
+            alpha = transformToApply.getAlpha();
+
+            if (alpha < 1.0f) {
+                final int multipliedAlpha = (int) (255 * alpha);
+
+                canvas.saveLayerAlpha(sx, sy, sx + cr - cl, sy + cb - ct, multipliedAlpha, Canvas.HAS_ALPHA_LAYER_SAVE_FLAG | Canvas.CLIP_TO_LAYER_SAVE_FLAG);
+            }
+        }
+        //  else
+        //    System.out.print("NON -> ");
+
+//        if (hasNoCache)
+//            canvas.clipRect(sx, sy, sx + (cr - cl), sy + (cb - ct));
+//        else if (!scalingRequired)
+//            canvas.clipRect(0, 0, cr - cl, cb - ct);
+//        else
+//            canvas.clipRect(0, 0, cache.getWidth(), cache.getHeight());
+        //       System.out.println("OK");
+
+        // Fast path for layouts with no backgrounds
+//            if ((child.mPrivateFlags & SKIP_DRAW) == SKIP_DRAW) {
+//                child.mPrivateFlags &= ~DIRTY_MASK;
+//                child.dispatchDraw(canvas);
+//            } else
+        child.draw(canvas);
+
+        canvas.restoreToCount(restoreTo);
+
+        if (a != null && !more)
+            //        child.onSetAlpha(255);
+            finishAnimatingView(child, a);
+
+        return more;
+    }
+
+    private void finishAnimatingView(final View view, Animation animation) {
+//        final ArrayList<View> disappearingChildren = mDisappearingChildren;
+//        if (disappearingChildren != null) {
+//            if (disappearingChildren.contains(view)) {
+//                disappearingChildren.remove(view);
+//
+//
+//                view.clearAnimation();
+//            }
+//        }
+
+        if (animation != null && !animation.getFillAfter())
+            view.clearAnimation();
+
+//        if ((view.mPrivateFlags & ANIMATION_STARTED) == ANIMATION_STARTED) {
+//            view.onAnimationEnd();
+//            // Should be performed by onAnimationEnd() but this avoid an infinite loop,
+//            // so we'd rather be safe than sorry
+//            view.mPrivateFlags &= ~ANIMATION_STARTED;
+//            // Draw one more frame after the animation is done
+//            mGroupFlags |= FLAG_INVALIDATE_REQUIRED;
+//        }
+    }
 
     @Override
     protected ViewGroup.LayoutParams generateDefaultLayoutParams() {
         return new IOSView.LayoutParams(CGRect.Zero());
     }
 
+    @Override
     public IOSView getIOSView() {
         return this;
     }

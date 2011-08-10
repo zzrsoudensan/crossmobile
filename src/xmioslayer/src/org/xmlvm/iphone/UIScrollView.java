@@ -10,10 +10,10 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Jubler; if not, write to the Free Software
+ * along with CrossMobile; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
- *
  */
+
 package org.xmlvm.iphone;
 
 import android.view.View;
@@ -143,7 +143,10 @@ public class UIScrollView extends UIView {
     }
 
     public void scrollRectToVisible(CGRect rect, boolean animated) {
-        throw new ImplementationError();
+        if (animated)
+            scroller.smoothScrollTo((int) (IOSView.x2Android(rect.origin.x) + 0.5f), (int) (IOSView.y2Android(rect.origin.y) + 0.5f));
+        else
+            scroller.scrollTo((int) (IOSView.x2Android(rect.origin.x) + 0.5f), (int) (IOSView.y2Android(rect.origin.y) + 0.5f));
     }
 
     private boolean skipCustomMethods() {

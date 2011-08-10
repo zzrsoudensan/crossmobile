@@ -10,13 +10,13 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Jubler; if not, write to the Free Software
+ * along with CrossMobile; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
- *
  */
+
 package org.xmlvm.iphone;
 
-import android.app.Activity;
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.view.View;
 import android.webkit.WebView;
@@ -99,8 +99,8 @@ public class UIWebView extends UIView {
     }
 
     @Override
-    View createModelObject(Activity activity) {
-        WebView wv = new WebView(activity);
+    View createModelObject(Context cx) {
+        WebView wv = new WebView(cx);
         wv.getSettings().setJavaScriptEnabled(true);
         wv.setWebViewClient(new WebViewClient() {
 

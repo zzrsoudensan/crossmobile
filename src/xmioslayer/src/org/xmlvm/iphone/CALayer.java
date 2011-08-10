@@ -10,15 +10,14 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Jubler; if not, write to the Free Software
+ * along with CrossMobile; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
- *
  */
+
 package org.xmlvm.iphone;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import org.crossmobile.ios2a.ImplementationError;
 
 public class CALayer extends NSObject {
 
@@ -54,7 +53,7 @@ public class CALayer extends NSObject {
     }
 
     public void renderInContext(CGContext context) {
-        throw new ImplementationError();
+        delegate.xm_model().draw(context.getCanvas());
     }
 
     public UIView getDelegate() {
