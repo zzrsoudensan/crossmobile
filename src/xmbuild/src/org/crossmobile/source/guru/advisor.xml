@@ -1,0 +1,229 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- 
+ 
+  Copyright (c) 2011 by crossmobile.org
+
+  CrossMobile is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, version 2.
+
+  CrossMobile is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with CrossMobile; if not, write to the Free Software
+  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+-->
+
+<advisor>
+    <natives> <!-- Java native types -->
+        <native type="byte"/>
+        <native type="short"/>
+        <native type="int"/>
+        <native type="long"/>
+        <native type="float"/>
+        <native type="double"/>
+        <native type="char"/>
+    </natives>
+    
+    <!-- Pre-set typedefs -->
+    <typedefs>
+        <typedef java="int" c="NSUInteger"/>
+        <typedef java="float" c="CGFloat"/>
+        <typedef java="boolean" c="BOOL"/>
+        <typedef java="int" c="NSInteger"/>
+        <typedef java="String" c="NSString"/>
+        <typedef java="String" c="CFString"/>
+        <typedef java="List" c="NSArray"/>
+        <typedef java="List" c="NSMutableArray"/>
+        <typedef java="byte" c="char"/>
+        <typedef java="Object" c="id"/>
+    </typedefs>
+    
+    <!-- Regular expressions to pre-process the source code, to clean up the include files -->
+    <replaceables>
+        <replace pattern="//.*"/>
+        <replace pattern="\\n"/>
+        <replace pattern="(?s)/\*.*?\*/"/>
+        <replace pattern="(?s)\\[\n\t\f\r]"/>
+        <replace pattern="\n\s*#.*"/>
+        <replace pattern="[\n\t\f\r]" with=" "/>
+        <replace pattern="@((class)|(protocol))[\w\s,]+?;"/>
+        <replace pattern=" {1,}" with=" "/>
+        <replace pattern="@package"/>
+        <replace pattern="@public"/>
+        <replace pattern="@protected"/>
+        <replace pattern="@private"/>
+        <replace pattern="extern\s*?.C.\s*?\{"/>
+        
+        <!-- If these are not defined, they will be mistaken for functions -->
+        <replace pattern="__OSX_AVAILABLE.*?\)"/>   
+        <replace pattern="__OSX_STREAM_PROPERTIES_DEPRECATED_10_6"/>   
+        <replace pattern="NS_DEPRECATED.*?\)"/>
+        <replace pattern="CA_DEPRECATED"/>
+        <replace pattern="CF_AVAILABLE.*?\)"/>
+        <replace pattern="CT_AVAILABLE.*?\)"/>
+        <replace pattern="EA_EXTERN_CLASS_AVAILABLE.*?\)"/>
+        <replace pattern="MP_EXTERN_CLASS_AVAILABLE.*?\)"/>
+        <replace pattern="SK_EXTERN_CLASS_AVAILABLE.*?\)"/>
+        <replace pattern="CG_AVAILABLE.*?\)"/>
+        <replace pattern="CORETELEPHONY_CLASS_AVAILABLE.*?\)"/>
+        <replace pattern="IMAGEIO_AVAILABLE_STARTING.*?\)"/>
+        <replace pattern="NS_AVAILABLE.*?\)"/>
+        <replace pattern="NS_CLASS_AVAILABLE.*?\)"/>
+        <replace pattern="NS_FORMAT_FUNCTION.*?\)"/>
+        <replace pattern="UIKIT_CLASS_AVAILABLE.*?\)"/>
+        <replace pattern="SC_SCHEMA_DECLARATION.*?\)\)"/>
+        <replace pattern="SC_SCHEMA_KV.*?\)"/>
+        
+        <replace pattern="NS_REQUIRES_NIL_TERMINATION"/>
+        <replace pattern="SC_SCHEMA_DECLARATION"/>
+        <replace pattern="__BEGIN_DECLS"/>
+        <replace pattern="__END_DECLS"/>
+        <replace pattern="__attribute__\(\(.*?\)\)"/>
+        
+        <replace pattern="AL_APIENTRY\s"/>
+        <replace pattern="ALC_APIENTRY\s"/>
+        <replace pattern="AL_API\s"/>
+        <replace pattern="ALC_API\s"/>
+        
+        <replace pattern="CORETELEPHONY_EXTERN_CLASS"/>
+        <replace pattern="EAGL_EXTERN_CLASS"/>
+        <replace pattern="EA_EXTERN_CLASS"/>
+        <replace pattern="EA_EXTERN_CLASS_AVAILABLE"/>
+        <replace pattern="GK_EXTERN_CLASS"/>
+        <replace pattern="MP_EXTERN_CLASS"/>
+        <replace pattern="MP_EXTERN_CLASS_AVAILABLE"/>
+        <replace pattern="SK_EXTERN_CLASS"/>
+        <replace pattern="SK_EXTERN_CLASS_AVAILABLE"/>
+        
+        <replace pattern="CA_EXTERN_C_BEGIN" with="extern"/>
+        <replace pattern="CA_EXTERN_C_END" with="extern"/>
+        <replace pattern="CF_EXTERN_C_END" with="extern"/>
+        <replace pattern="CF_EXTERN_C_BEGIN" with="extern"/>
+        <replace pattern="IMAGEIO_EXTERN_C_BEGIN" with="extern"/>
+        <replace pattern="IMAGEIO_EXTERN_C_END" with="extern"/>
+        <replace pattern="QL_EXTERN_C_BEGIN" with="extern"/>
+        <replace pattern="QL_EXTERN_C_END" with="extern"/>
+        
+        <replace pattern="CA_EXTERN" with="extern"/>
+        <replace pattern="CG_EXTERN" with="extern"/>
+        <replace pattern="CF_EXTERN" with="extern"/>
+        <replace pattern="COREDATA_EXTERN" with="extern"/>
+        <replace pattern="CORETELEPHONY_EXTERN" with="extern"/>
+        <replace pattern="EA_EXTERN" with="extern"/>
+        <replace pattern="EAGL_EXTERN" with="extern"/>
+        <replace pattern="GK_EXTERN" with="extern"/>
+        <replace pattern="IMAGEIO_EXTERN" with="extern"/>
+        <replace pattern="MP_EXTERN" with="extern"/>
+        <replace pattern="SK_EXTERN" with="extern"/>
+        <replace pattern="UIKIT_EXTERN" with="extern"/>
+
+        <replace pattern="CF_EXPORT" with="extern"/>
+        <replace pattern="CFN_EXPORT" with="extern"/>
+        <replace pattern="CM_EXPORT" with="extern"/>
+        <replace pattern="CV_EXPORT" with="extern"/>
+        <replace pattern="FOUNDATION_EXPORT" with="extern"/>
+        <replace pattern="MIDI_EXPORT" with="extern"/>
+        <replace pattern="MT_EXPORT" with="extern"/>
+        <replace pattern="QL_EXPORT" with="extern"/>
+        <replace pattern="QL_PRIVATE_EXPORT" with="extern"/>
+        <replace pattern="VT_EXPORT" with="extern"/>
+        
+        <replace pattern="CG_INLINE" with="extern"/>
+        <replace pattern="CF_INLINE" with="extern"/>
+        <replace pattern="NS_INLINE" with="extern"/>        
+        <replace pattern="UIKIT_STATIC_INLINE" with="extern"/>
+
+
+        <replace pattern="@optional"/>
+        <replace pattern="@required"/>
+
+    </replaceables>
+
+<!--    <generics>
+        <genericsclass class="NSData" items="2"/>
+    </generics>-->
+    <idconflicts>
+        <returnid signature="NSObject:accessibilityElementAtIndex:int" object="Object"/>
+        <returnid signature="UILocalizedIndexedCollation:currentCollation:" object="UILocalizedIndexedCollation"/>
+        <returnid signature="UIPasteboard:valueForPasteboardType:String" object="Object"/>
+        
+        <argumentid signature="NSMutableData:NSUInteger1">
+            <argumentiditem object="Object1"/>
+        </argumentid>
+        <argumentid signature="NSMutableData:NSUInteger2">
+            <argumentiditem object="Object2"/>
+            <argumentiditem object="Object3"/>
+        </argumentid>
+        <argumentid signature="NSMutableData:NSUInteger3">
+            <argumentiditem object="Object4"/>
+            <argumentiditem object="Object5"/>
+            <argumentiditem object="Object6"/>
+        </argumentid>
+    </idconflicts>
+    <overloads>
+        <constructor signature="NSData::byte[]int" type="Data">
+            <citem value="Copy"/>
+            <citem value="Reuse"/>
+        </constructor>
+        <constructor signature="NSData::String" type="File">
+            <citem value="Mapped"/>
+            <citem value="Regular"/>
+        </constructor>
+        <constructor signature="NSMutableData::int" type="Data">
+            <citem value="Capacity"/>
+            <citem value="Length"/>
+        </constructor>    
+        <constructor signature="NSDate::NSTimeInterval" type="ReferenceDate">
+            <citem value="SinceDate"/>
+            <citem value="SinceNow"/>
+            <citem value="Since1970"/>
+        </constructor>
+        <constructor signature="NSFileWrapper::NSData" type="ContentType">
+            <citem value="NSData"/>
+            <citem value="SerializedRepresentation"/>
+        </constructor>
+        <constructor signature="NSFileWrapper::String" type="FileType">
+            <citem value="Regular"/>
+            <citem value="SymbolicLinkWithDestination"/>
+        </constructor>
+        <constructor signature="NSSocketPort::intintintNSData" type="Location">
+            <citem value="Default"/>
+            <citem value="Remote"/>
+        </constructor>    
+        <constructor signature="NSString::String" type="Type">
+            <citem value="String"/>
+            <citem value="File"/>
+        </constructor>
+        <constructor signature="NSURL::String" type="URLType">
+            <citem value="Any"/>
+            <citem value="FileURL"/>
+        </constructor>
+        <constructor signature="NSURLProtectionSpace::StringintStringStringString" type="ServerType">
+            <citem value="Default"/>
+            <citem value="Proxy"/>
+        </constructor>
+        <constructor signature="UIColor::floatfloatfloatfloat" type="Colorspace" resetnames="true">
+            <citem value="RGBA"/>
+            <citem value="HSBA"/>
+        </constructor>
+    </overloads>
+    
+    <!-- Used in procedurals while naming parsing, to disable first lower case letter -->
+    <canonicals>
+        <canonical type="k" target=""/>
+        <canonical type="al" target="Al"/>
+        <canonical type="alc" target="Alc"/>
+    </canonicals>
+    
+    <!-- Used in CObject, to define that an object is a delegate, so that the selector names should be more agressively trimmed -->
+    <delegates>
+        <delegate pattern=".*Client$"/>
+        <delegate pattern=".*Delegate$"/>
+    </delegates>
+</advisor>
+
