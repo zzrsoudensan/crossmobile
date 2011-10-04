@@ -224,6 +224,7 @@ public class SkeletonCreator extends Task {
         Method[] methods = clazz.getDeclaredMethods();
         Arrays.sort(methods, new Comparator<Method>() {
 
+            @Override
             public int compare(Method o1, Method o2) {
                 int c = o1.getName().compareTo(o2.getName());
                 if (c == 0)
@@ -263,6 +264,7 @@ public class SkeletonCreator extends Task {
         Constructor[] constrlist = clazz.getDeclaredConstructors();
         Arrays.sort(constrlist, new Comparator<Constructor>() {
 
+            @Override
             public int compare(Constructor o1, Constructor o2) {
                 return o1.getParameterTypes().length - o2.getParameterTypes().length;
             }
@@ -301,6 +303,7 @@ public class SkeletonCreator extends Task {
         if (fields != null && fields.length > 0) {
             Arrays.sort(fields, new Comparator<Field>() {
 
+                @Override
                 public int compare(Field o1, Field o2) {
                     return o1.getName().compareTo(o2.getName());
                 }

@@ -17,7 +17,6 @@
 package org.crossmobile.source.ctype;
 
 import java.util.List;
-import org.crossmobile.source.guru.Reporter;
 import org.crossmobile.source.utils.StringUtils;
 
 public class CFunction extends CProcedural {
@@ -45,20 +44,25 @@ public class CFunction extends CProcedural {
     }
 
     public static void create(CLibrary parent, String entry) {
-        if (entry.contains("typedef")) {
-            Reporter.FUNCTION_POINTER.report("typedef", entry);
-            return;
-        }
+        String original = entry;
+        entry = entry.trim();
+
+        if (entry.endsWith("}")) {
+            entry = entry.substring(0, StringUtils.matchFromEnd(entry, '{', '}')).trim();
+            original = entry + ";";
+        } else
+            entry = entry.substring(0, entry.length() - 1).trim();
+
         int begin = StringUtils.matchFromEnd(entry, '(', ')');
         String prefix = entry.substring(0, begin).trim();
         String args = entry.substring(begin + 1, entry.length() - 1).trim();
         int last = StringUtils.findLastWord(prefix);
         String type = prefix.substring(0, last);
-        parent.addProcedural(new CFunction(
+        parent.addCFunction(new CFunction(
                 new CType(type),
                 prefix.substring(last),
                 CArgument.getFunctionArgments(args),
-                entry,
+                original,
                 parent.getCurrentFile()));
     }
 }

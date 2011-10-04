@@ -47,7 +47,7 @@ public class Oracle {
                     String part = data.substring(from, to);
                     if (res.isEmpty()) {// first item should not be lower case - take care of this
                         boolean found = false;
-                        Map<String, String> canonicals = Advisor.getCanonicals();
+                        Map<String, String> canonicals = Advisor.getConstantCanonicals();
                         for (String type : canonicals.keySet())
                             if (part.equals(type)) {
                                 found = true;

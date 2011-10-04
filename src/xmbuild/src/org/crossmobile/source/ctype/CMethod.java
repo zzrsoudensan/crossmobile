@@ -23,9 +23,10 @@ public class CMethod extends CSelector {
     private final CType returnType;
     private final boolean isStatic;
     private String canonicalName;
+    private boolean isProperty = false;
 
-    public CMethod(boolean isStatic, CType returnType, String name, List<CArgument> arguments, List<String> nameparts) {
-        super(name, arguments, nameparts);
+    public CMethod(String name, boolean isAbstract, List<CArgument> arguments, List<String> nameparts, boolean isStatic, CType returnType) {
+        super(name, isAbstract, arguments, nameparts);
         this.isStatic = isStatic;
         this.returnType = returnType;
         this.canonicalName = name;
@@ -35,26 +36,28 @@ public class CMethod extends CSelector {
         return isStatic;
     }
 
-    @Override
-    public String toString() {
-        return toString(false);
-    }
-
-    public String toString(boolean asAbstract) {
-        StringBuilder out = new StringBuilder("\n");
-        out.append(getJavadoc());
-        out.append("\tpublic ");
-        if (isStatic)
-            out.append("static ");
-        else if (asAbstract)
-            out.append("abstract ");
-
-        out.append(returnType).append(" ").append(canonicalName).append("(").append(CArgument.fromList(arguments)).
-                append(")").append(asAbstract ? ABSTRACTBODY : DUMMYBODY);
-        return out.toString();
-    }
-
     public void setCanonicalName(String cname) {
         this.canonicalName = cname;
+    }
+
+    public CType getReturnType() {
+        return returnType;
+    }
+
+    public String getCanonicalName() {
+        return canonicalName;
+    }
+
+    public boolean isProperty() {
+        return isProperty;
+    }
+
+    public void setProperty() {
+        isProperty = true;
+    }
+
+    @Override
+    public String toString() {
+        return getName();
     }
 }

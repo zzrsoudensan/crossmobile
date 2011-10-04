@@ -16,74 +16,24 @@
 
 package org.crossmobile.source.ctype;
 
-import java.io.IOException;
-import java.io.Writer;
 import java.util.List;
 import org.crossmobile.source.guru.Oracle;
-import org.crossmobile.source.guru.Reporter;
-import org.crossmobile.source.utils.StringUtils;
-import org.crossmobile.source.utils.WritableObject;
 
-/**
- *
- * @author teras
- */
-public class CProcedural implements WritableObject {
+public class CProcedural {
 
-    private List<String> name;
+    private final String name;
+    private final List<String> allnames;
     protected String original;
     protected String filename;
 
-    public static String register(CLibrary parent, String data) {
-        List<String> res = StringUtils.divideBySection(data);
-        StringBuilder residue = new StringBuilder();
-        for (String entry : res)
-            if (entry.startsWith("(")) {
-                Reporter.PROCEDURAL_PROBLEM.report("starts with parenthesis", entry);
-                continue;
-            } else
-                parse(parent, entry, residue);
-        return residue.toString();
-    }
-
-    private static void parse(CLibrary parent, String entry, StringBuilder residue) {
-        String header = entry;
-        if (entry.endsWith("}")) {
-            int begin = StringUtils.matchFromEnd(entry, '{', '}');
-            header = entry.substring(0, begin).trim();
-        }
-        if (header.endsWith(")"))
-            CFunction.create(parent, header); // Only the header - ignore the body
-        else if (header.startsWith("struct"))
-            CStruct.create(parent, entry);
-        else if (header.startsWith("enum"))
-            CEnum.create(parent, entry);
-        else if (header.startsWith("typedef"))
-            CType.create(parent, entry);
-        else if (header.contains(" struct"))
-            CStruct.create(parent, entry);
-        else if (header.contains(" enum"))
-            CEnum.create(parent, entry);
-        else if (header.contains(" typedef"))
-            CType.create(parent, entry);
-        else if (header.startsWith("extern") || header.contains(" extern"))
-            CExternal.create(parent, entry);
-        else
-            residue.append(entry).append(";");
-    }
-
     public CProcedural(String name, String original, String filename) {
-        this.name = Oracle.canonical(name);
+        this.allnames = Oracle.canonical(name);
+        this.name = name;
         this.original = original;
         this.filename = filename;
     }
 
-    @Override
-    public void writeTo(Writer out) throws IOException {
-        out.write(toString());
-    }
-
     public String getName() {
-        return name.get(0);
+        return name;
     }
 }

@@ -16,25 +16,23 @@
 
 package org.crossmobile.source.ctype;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.Writer;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Set;
 import org.crossmobile.source.guru.Advisor;
-import org.crossmobile.source.parsers.ObjectParser;
 import org.crossmobile.source.utils.FileUtils;
 import org.crossmobile.source.guru.Reporter;
-import org.crossmobile.source.utils.FinalizableObject;
-import org.crossmobile.source.utils.WritableObject;
+import org.crossmobile.source.parser.BlockType;
+import org.crossmobile.source.parser.Stream;
 
-public class CLibrary implements WritableObject, FinalizableObject {
+public class CLibrary {
 
-    private final static ObjectParser parser = new ObjectParser();
-    //
     private final Map<String, CObject> objects = new HashMap<String, CObject>();
-    private final LinkedHashSet<CProcedural> procedurals = new LinkedHashSet<CProcedural>();
+    private final Set<CEnum> enums = new LinkedHashSet<CEnum>();
+    private final Set<CStruct> structs = new LinkedHashSet<CStruct>();
+    private final Set<CFunction> functions = new LinkedHashSet<CFunction>();
+    private final Set<CExternal> externals = new LinkedHashSet<CExternal>();
     private String currentFile;
     private final String packagename;
 
@@ -42,17 +40,80 @@ public class CLibrary implements WritableObject, FinalizableObject {
         this.packagename = packagename;
     }
 
-    public synchronized void parseFile(String filename) {
+    public synchronized void addFile(String filename) {
         String data = FileUtils.getFile(filename);
         if (data == null)
             return;
         this.currentFile = filename;
         Reporter.setFile(filename);
-
         data = Advisor.convertData(data);
-        data = parser.parse(this, data);
-        data = CProcedural.register(this, data);
-        Reporter.addResidue("file", data);
+
+        CObject lastObject = null;
+
+        Stream s = new Stream(data);
+        s.consumeSpaces();
+        BlockType type;
+        boolean istypedef;
+        boolean isRequired;
+        boolean isProtocol;
+        while ((type = s.peekBlockType()) != BlockType.EOF) {
+            String z = s.peekBlock();
+            istypedef = false;
+            switch (type) {
+                case OPTIONAL:
+                case REQUIRED:
+                    isRequired = type == BlockType.REQUIRED;
+                    s.consumeBlock();
+                    break;
+                case PROTOCOLSTART:
+                case OBJECTSTART:
+                    isProtocol = type == BlockType.PROTOCOLSTART;
+                    s.consumeBlock();
+                    lastObject = CObject.parse(this, isProtocol, s);
+                    isRequired = isProtocol;    // by default, protocol selectors are required. If it is a class, (not a protocol) it is not required (it has default implementation)
+                    break;
+                case PROPERTY:
+                    if (lastObject == null)
+                        throw new NullPointerException("Enclosing object not found!");
+                    s.consumeBlock();
+                    CProperty.parse(lastObject, s);
+                    break;
+                case SELECTOR:
+                    if (lastObject == null)
+                        throw new NullPointerException("Enclosing object not found!");
+                    CSelector.parse(lastObject, s);
+                    break;
+                case OBJECTEND:
+                    Reporter.setObject(null);
+                    lastObject = null;
+                    s.consumeBlock();
+                    break;
+                case TYPEDEFFUNCTION:
+                    CType.isFunctionPointer(s.consumeBlock(), "typedef");
+                    break;
+                case FUNCTION:
+                    CFunction.create(this, s.consumeBlock());
+                    break;
+                case TYPEDEFENUM:
+                    istypedef = true;
+                case ENUM:
+                    CEnum.create(this, istypedef, s.consumeBlock());
+                    break;
+                case TYPEDEFSTRUCT:
+                    istypedef = true;
+                case STRUCT:
+                    CStruct.create(this, istypedef, s.consumeBlock());
+                    break;
+                case TYPEDEFEXTERNAL:
+                    istypedef = true;
+                case EXTERNAL:
+                    CExternal.create(this, istypedef, s.consumeBlock());
+                    break;
+                default:
+                    Reporter.addUnknownItem(lastObject, s.consumeBlock());
+            }
+        }
+
         this.currentFile = null;
     }
 
@@ -60,48 +121,27 @@ public class CLibrary implements WritableObject, FinalizableObject {
         CObject obj = objects.get(name);
         if (obj != null)
             return obj;
+
+        name = new CType(name).getProcessedName();
         obj = new CObject(this, name, isProtocol);
         objects.put(name, obj);
         return obj;
     }
 
-    @Override
-    public String toString() {
-        StringBuilder out = new StringBuilder();
-        for (CObject o : objects.values())
-            out.append(o.toString()).append("\n");
-        return out.toString();
+    public Set<CEnum> getEnums() {
+        return enums;
     }
 
-    public void addProcedural(CProcedural ext) {
-        procedurals.add(ext);
+    public Set<CExternal> getExternals() {
+        return externals;
     }
 
-    public void output(String outdir) {
-        File out = new File(outdir);
-        FileUtils.delete(out);
-        for (CObject o : objects.values())
-            FileUtils.putFile(new File(out, "src" + File.separator + o.getName() + ".java"), o);
-
-        ctype = CEnum.class;
-        FileUtils.putFile(new File(out, "enumerations.java"), this);
-        ctype = CExternal.class;
-        FileUtils.putFile(new File(out, "externals.java"), this);
-        ctype = CFunction.class;
-        FileUtils.putFile(new File(out, "functions.java"), this);
-        ctype = CStruct.class;
-        FileUtils.putFile(new File(out, "structs.java"), this);
-
-        for (Reporter r : Reporter.values())
-            FileUtils.putFile(new File(out, "report" + File.separator + r.name().toLowerCase() + ".xml"), r);
+    public Set<CFunction> getFunctions() {
+        return functions;
     }
-    private Class ctype;
 
-    @Override
-    public void writeTo(Writer out) throws IOException {
-        for (CProcedural proc : procedurals)
-            if (proc.getClass().equals(ctype))
-                out.write(proc.toString());
+    public Set<CStruct> getStructs() {
+        return structs;
     }
 
     public String getCurrentFile() {
@@ -112,12 +152,39 @@ public class CLibrary implements WritableObject, FinalizableObject {
         return packagename;
     }
 
-    @Override
-    public void finalizeStructures() {
+    public void finalizeLibrary() {
         Reporter.setFile(null);
+        getObject("CFType", false);
+        getObject("SEL", false);
+        getObject("NSZone", false);
+        getObject("Protocol", false);
+        getObject("NSComparator", false);
+        getObject("IMP", false);
+        getObject("NSURLHandle", false);
+        getObject("NSURLHandleClient", false);
+        getObject("NSHost", false);
+        getObject("NSPortMessage", false);
+        getObject("NSConnection", false);
+        getObject("SCNetworkInterface", false);
+        getObject("CMFormatDescription", false);
+
+        Advisor.addDefaultTypedefs();
+        CType.finalizeTypedefs();
         for (CObject o : objects.values()) {
             Reporter.setObject(o.getName());
-            o.finalizeStructures();
+            o.finalizeObject();
         }
+    }
+
+    public Iterable<CObject> getObjects() {
+        return objects.values();
+    }
+
+    void addCFunction(CFunction cFunction) {
+        functions.add(cFunction);
+    }
+
+    void addCExternal(CExternal cExternal) {
+        externals.add(cExternal);
     }
 }

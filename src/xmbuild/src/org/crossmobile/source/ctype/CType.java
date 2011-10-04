@@ -24,11 +24,27 @@ import org.crossmobile.source.utils.StringUtils;
 
 public class CType {
 
-    private TypeID typeid;
-    private String suffix;
+    private static Map<String, String> typedefs = new HashMap<String, String>();
+    //
+    private final TypeID typeid;
+    private final String processed;
+    private boolean varargs = false;
+    private int reference = 0;
 
     public CType(String name) {
-        name = name.trim();
+        // Remove unused identifiers
+        String original = name;
+        name = name.replaceAll("\\*\\s*const", "").
+                replaceAll("const\\s", "").
+                replaceAll("struct\\s", "").
+                replaceAll("inline\\s", "").
+                replaceAll("extern\\s", "").
+                replaceAll("inout\\s", "").
+                replaceAll("out\\s", "").
+                replaceAll("in\\s", "").
+                replaceAll("oneway\\s", "").
+                replaceAll("typedef\\s", "").
+                replaceAll("__strong\\s", "").trim();
 
         // Failsafe for unmatched types
         if (name.isEmpty())
@@ -38,38 +54,32 @@ public class CType {
         if (isFunctionPointer(name, "parameter"))
             name = "Object";
 
-        // Replace "Ref" with *
+        // Beautify Ref pointers
         if (name.endsWith("Ref"))
-            name = name.replaceFirst("Ref$", "*");
+            name = name.substring(0, name.length() - 3);
 
         /*  Resolve pointers */
-        // Triple pointer not supported
-        if (name.contains("***"))
-            throw new RuntimeException("Unsupported operation: ***");
-        // Double pointer is back reference
-        boolean doublepointer = name.contains("**");
-        if (doublepointer)
-            name = name.replaceAll("\\*\\*", "");
-        // Single pointer
-        boolean pointer = name.contains("*");
-        if (pointer)
+        reference = StringUtils.count(name, '*');
+        if (reference > 0)
             name = name.replaceAll("\\*", "");
+        int openBracket = name.indexOf('[');
+        if (openBracket >= 0) {
+            int closeBracket = name.lastIndexOf(']');
+            reference += StringUtils.count(name, '[');
+            name = name.substring(0, openBracket) + name.substring(closeBracket + 1, name.length());
+        }
 
-        boolean varargs = name.contains("...");
+        varargs = name.contains("...");
         if (varargs)
             name = name.replace("...", "");
 
-        // Remove unused identifiers
-        name = name.replaceAll("struct", "").
-                replaceAll("const", "").
-                replaceAll("unsigned", "").
-                replaceAll("extern", "").
-                replaceAll("inout\\s", "").
-                replaceAll("out\\s", "").
-                replaceAll("in\\s", "").
-                replaceAll("oneway\\s", "").
-                replaceAll("__strong\\s", "").
-                replaceAll("\\s\\s", " ").trim();
+        // Fix naming conventions
+        if (name.contains("signed")) {
+            name = name.replaceAll("unsigned", "").replaceAll("signed", "").replaceAll("\\s\\s", " ").trim();
+            if (name.isEmpty())
+                name = "int";
+        } else
+            name = name.replaceAll("\\s\\s", " ").trim();
         if (name.equals("short int"))
             name = "short";
         if (name.equals("long int"))
@@ -81,6 +91,16 @@ public class CType {
         if (name.equals("long double"))
             name = "double";
 
+        while (name.startsWith("_")) {
+            String shorter = name.substring(1);
+            registerTypedef(shorter, name);
+            name = shorter;
+        }
+        if (name.toLowerCase().startsWith("opaque")) {
+            String shorter = name.substring(6);
+            registerTypedef(shorter, name);
+            name = shorter;
+        }
 
         // Replace protocol with Object name
         if (name.endsWith(">"))
@@ -96,45 +116,56 @@ public class CType {
                 name = name.substring(0, where);
             }
 
-
         if (name.contains(" ")) {
-            Reporter.ARGUMENT_PARSING.report("type contains spaces", name);
+            Reporter.ARGUMENT_PARSING.report("type \'" + name + "\' contains spaces", original);
             name = "Object";
+            name = name.replaceAll(" ", "");
         }
-        name = name.replaceAll(" ", "");
-
-        // Deal with C strings
-        if (pointer && name.equals("char"))
-            name = "String";
 
         // Deal with void* pointer
-        if (pointer && name.equals("void"))
+        if (reference > 0 && name.equals("void"))
             name = "byte";
 
         // Get type
         typeid = TypeID.get(name);
-
-        // Fix pointer status
-        boolean isNative = Advisor.isNativeType(name);
-        if (doublepointer)
-            suffix = isNative ? "[][]" : "Ptr";
-        else if (pointer && isNative)
-            suffix = "[]";
-        else
-            suffix = "";
-        if (varargs)
-            suffix += "...";
+        processed = name;
     }
 
     @Override
     public String toString() {
-        return typeid.name + suffix;
+        int level = reference + typeid.reference;
+        if (level > 0 && !Advisor.isNativeType(typeid.name))
+            level--;
+        StringBuilder b = new StringBuilder(typeid.name);
+        for (; level > 0; level--)
+            b.append("[]");
+        if (varargs)
+            b.append("...");
+        return b.toString();
+    }
+
+    public String getProcessedName() {
+        return processed;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof CType))
+            return false;
+        return processed.equals(((CType) obj).processed);
+    }
+
+    @Override
+    public int hashCode() {
+        return processed.hashCode();
     }
 
     private static class TypeID {
 
         private final static Map<String, TypeID> types = new HashMap<String, TypeID>();
+        //
         private String name;
+        private int reference = 0;
 
         private TypeID(String name) {
             this.name = name;
@@ -148,6 +179,11 @@ public class CType {
             }
             return res;
         }
+
+        @Override
+        public String toString() {
+            return name;
+        }
     }
 
     public boolean isID() {
@@ -155,28 +191,57 @@ public class CType {
     }
 
     // New type will be equal to nativetype
-    public static void registerTypedef(String systemtype, String newtype) {
-        TypeID stype = TypeID.get(systemtype);
-        TypeID ntype = TypeID.get(newtype);
-        String toChange = ntype.name;
-        ntype.name = stype.name;
-        for (TypeID t : TypeID.types.values())
-            if (t.name.equals(toChange))
-                t.name = stype.name;
+    public static String registerTypedef(String systemtype, String newtype) {
+        if ((systemtype.toLowerCase().startsWith("opaque") && !newtype.toLowerCase().startsWith("opaque"))) {
+            String swap = systemtype;
+            systemtype = newtype;
+            newtype = swap;
+        }
+        if (!isFinalizing)
+            typedefs.put(newtype, systemtype);
+        return systemtype;
+    }
+    private static boolean isFinalizing = false;
+
+    public static void finalizeTypedefs() {
+        isFinalizing = true;
+        for (String key : typedefs.keySet()) {
+            CType stype = new CType(typedefs.get(key));
+            String systemname = stype.typeid.name;
+            int addedRef = stype.reference + stype.typeid.reference;
+            TypeID ntypeid = new CType(key).typeid;
+            String toChange = ntypeid.name;
+            for (TypeID t : TypeID.types.values())
+                if (t.name.equals(toChange)) {
+                    t.name = systemname;
+                    t.reference += addedRef;
+                }
+        }
+        isFinalizing = true;
     }
 
     public static boolean isFunctionPointer(String name, String context) {
-        if (name.contains("^")) {
+        int from = name.indexOf('^');
+        if (from >= 0) {
             Reporter.FUNCTION_POINTER.report(context + " is block", name);
-            return true;
-        } else if (name.contains("(")) {
-            Reporter.FUNCTION_POINTER.report(context + " is function pointer", name);
+            name = name.substring(from + 1);
+            int to = StringUtils.findFirstWord(name);
+            if (to > 0)
+                registerTypedef("Object", name.substring(0, to));
             return true;
         }
-        return false;
-    }
 
-    public static void create(CLibrary parent, String entry) {
-        //    throw new UnsupportedOperationException("Not yet implemented");
+        from = name.indexOf('(');
+        if (from >= 0) {
+            name = name.substring(from);
+            int to = StringUtils.matchFromStart(name, '(', ')');
+            name = name.substring(to + 1).trim();
+            if (name.charAt(0) == '(') {
+                Reporter.FUNCTION_POINTER.report(context + " is function pointer", name);
+                return true;
+            }
+        }
+
+        return false;
     }
 }

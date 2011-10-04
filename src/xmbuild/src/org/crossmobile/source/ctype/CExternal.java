@@ -45,11 +45,25 @@ public class CExternal extends CProcedural {
         return "\n\t/**\n\t * " + original + "\n\t * " + filename + "\n\t */\n\t" + type.toString() + " " + getName() + " = ...;\n";
     }
 
-    public static void create(CLibrary parent, String entry) {
-        entry = entry.replace("extern", "").trim();
+    public static void create(CLibrary parent, boolean istypedef, String entry) {
+        String original = entry;
+        entry = entry.trim();
+        if (entry.contains("typedef"))
+            entry = entry.replaceAll("typedef", "").replaceAll("  ", " ").trim();
+        if (entry.charAt(entry.length() - 1) == ';')
+            entry = entry.substring(0, entry.length() - 1).trim();
         if (entry.length() == 0)
             return;
         int last = StringUtils.findLastWord(entry);
-        parent.addProcedural(new CExternal(new CType(entry.substring(0, last)), entry.substring(last), entry, parent.getCurrentFile()));
+        String name = entry.substring(last).trim();
+        String def = entry.substring(0, last).trim();
+        if (istypedef) {
+            if (def.endsWith("Ref"))
+                parent.getObject(new CType(name).getProcessedName(), false).setSuperclass(def.substring(0, def.length() - 3));
+            else
+                CType.registerTypedef(def, name);
+            return;
+        } else
+            parent.addCExternal(new CExternal(new CType(def), name, original, parent.getCurrentFile()));
     }
 }

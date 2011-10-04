@@ -18,10 +18,14 @@ package org.crossmobile.source;
 
 import java.io.File;
 import org.crossmobile.source.ctype.CLibrary;
+import org.crossmobile.source.out.JavaOut;
 
 public class Main {
 
-    private static final String inputpath = System.getProperty("user.home") + File.separator + "/Works/Development/Mobile/SDK/CrossMobile/Frameworks";
+    private static boolean printProgress = false;
+    //
+    private static final String inputpath = "/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS4.3.sdk/System/Library/Frameworks";
+    //private static final String inputpath = System.getProperty("user.home") + File.separator + "/Works/Development/Mobile/SDK/CrossMobile/Frameworks";
     private static final String outputpath = System.getProperty("user.home") + File.separator + "output";
     private static final String searchInto = null;//"/Users/teras/Works/Development/Mobile/SDK/CrossMobile/Frameworks/SystemConfiguration.framework/Headers/SCSchemaDefinitions.h";
 
@@ -29,20 +33,47 @@ public class Main {
         CLibrary library = new CLibrary("org.xmlvm.iphone");
 
         if (searchInto == null)
-            for (File frameworks : new File(inputpath).listFiles()) {
-                System.out.println("*** Parsing " + frameworks.getPath());
-                if (new File(frameworks + File.separator + "Headers").isDirectory())
-                    for (File f : new File(frameworks, "Headers").listFiles())
-                        if (f.getPath().toLowerCase().endsWith(".h"))
-                            library.parseFile(f.getPath());
-            }
+            addFixed(library, new File(inputpath));
+            //addRecursive(library, new File(inputpath));
         else
-            library.parseFile(searchInto);
+            library.addFile(searchInto);
 
-        System.out.println("*** Finalize");
-        library.finalizeStructures();
+        if (printProgress)
+            System.out.println("*** Finalize");
+        library.finalizeLibrary();
 
-        System.out.println("*** Output");
-        library.output(outputpath);
+        if (printProgress)
+            System.out.println("*** Output");
+        JavaOut out = new JavaOut(outputpath);
+
+        out.generate(library);
+        out.report();
+    }
+
+    private static void addRecursive(CLibrary lib, File file) {
+        if (file.isDirectory()) {
+            File[] list = file.listFiles();
+            if (list != null)
+                for (File item : list)
+                    addRecursive(lib, item);
+        } else {
+            String filename = file.getPath();
+            if (filename.toLowerCase().endsWith(".h")) {
+                if (printProgress)
+                    System.out.println("*** Parsing " + filename);
+                lib.addFile(filename);
+            }
+        }
+    }
+
+    private static void addFixed(CLibrary lib, File file) {
+        for (File frameworks : file.listFiles()) {
+            if (printProgress)
+                System.out.println("*** Parsing " + frameworks.getPath());
+            if (new File(frameworks + File.separator + "Headers").isDirectory())
+                for (File f : new File(frameworks, "Headers").listFiles())
+                    if (f.getPath().toLowerCase().endsWith(".h"))
+                        lib.addFile(f.getPath());
+        }
     }
 }

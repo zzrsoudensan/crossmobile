@@ -16,38 +16,106 @@
 
 package org.crossmobile.source.ctype;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.StringTokenizer;
+import org.crossmobile.source.guru.Reporter;
+import org.crossmobile.source.utils.StringUtils;
+import org.crossmobile.source.parser.Stream;
+
 public class CProperty extends CAnyFunction {
 
-    private final String name;
     private final CType type;
     private final String getter;
     private final String setter;
 
-    public CProperty(String name, CType type, String getter, String setter) {
-        this.name = name;
+    public CProperty(String name, boolean isAbstract, CType type, String getter, String setter) {
+        super(name, isAbstract);
         this.type = type;
         this.getter = getter;
         this.setter = setter;
     }
 
-    @Override
-    public String toString() {
-        return toString(false);
+    public String getGetterName() {
+        return getter;
     }
 
-    public String toString(boolean asAbstract) {
-        StringBuilder out = new StringBuilder("\n");
-        out.append(getJavadoc()).append("\tpublic ");
-        if (asAbstract)
-            out.append("abstract ");
-        out.append(type).append(" ").append(getter).append("()").append(asAbstract ? ABSTRACTBODY : DUMMYBODY);
-        if (setter != null) {
-            out.append("\n").append(getJavadoc()).append("\tpublic ");
-            if (asAbstract)
-                out.append("abstract ");
-            out.append("void").append(" ").append(setter);
-            out.append("(").append(type).append(" ").append(name).append(")").append(asAbstract ? ABSTRACTBODY : DUMMYBODY);
+    public String getSetterName() {
+        return setter;
+    }
+
+    public CType getType() {
+        return type;
+    }
+
+    public static void parse(CObject parent, Stream s) {
+        String property = s.consumeBlock().trim();
+        String mods = null;
+        String defs = property.substring(0, property.length() - 1).trim();
+        if (defs.charAt(0) == '(') { // Has modifiers
+            int end = StringUtils.matchFromStart(defs, '(', ')');
+            mods = defs.substring(1, end).trim();
+            defs = defs.substring(end + 1).trim();
         }
-        return out.toString();
+
+        if (CType.isFunctionPointer(defs, "property"))
+            return;
+
+        // Find all names
+        List<String> names = new ArrayList<String>();
+        List<String> getterL = new ArrayList<String>();
+        List<String> setterL = new ArrayList<String>();
+        defs += ",";
+        boolean hasStar = false;
+        while (defs.endsWith(",")) {
+            defs = defs.substring(0, defs.length() - 1).trim();
+            int lastWord = StringUtils.findLastWord(defs);
+            names.add(defs.substring(lastWord));
+            defs = defs.substring(0, lastWord).trim();
+            if (defs.endsWith("*")) {
+                hasStar = true;
+                defs = defs.substring(0, defs.length() - 1).trim();
+            } else
+                hasStar = false;    // Take care ONLY for the last one - copy type of first object to all others. So we need to keep the star if it is deleted by the last entry
+        }
+
+        // Calculate getters/setters
+        CType ptype = new CType(defs + (hasStar ? "*" : ""));
+        for (String bname : names) {
+            String camelName = bname.substring(0, 1).toUpperCase() + bname.substring(1);
+            getterL.add("get" + camelName);
+            setterL.add("set" + camelName);
+        }
+
+        // Find modifiers (name only for first property)
+        boolean writable = true;
+        if (mods != null) {
+            StringTokenizer tk = new StringTokenizer(mods, ",");
+            while (tk.hasMoreElements()) {
+                String cmod = tk.nextToken().trim();
+                if (cmod.equals("readonly"))
+                    writable = false;
+                else if (cmod.startsWith("getter"))
+                    getterL.set(0, getParameterDefinition(cmod.substring(6)));
+                else if (cmod.startsWith("setter"))
+                    setterL.set(0, getParameterDefinition(cmod.substring(6)));
+            }
+        }
+
+        // Add properties
+        String definition = "@property" + property;
+        for (int i = 0; i < names.size(); i++) {
+            CProperty prop = new CProperty(names.get(i), parent.isProtocol(), ptype, getterL.get(i), writable ? setterL.get(i) : null);
+            prop.addDefinition(definition);
+            parent.addProperty(prop);
+        }
+    }
+
+    private static String getParameterDefinition(String cmod) {
+        cmod = cmod.trim();
+        if (cmod.charAt(0) != '=')
+            Reporter.PROPERTY_ERROR.report("missing = sign", cmod);
+        cmod = cmod.substring(1).trim();
+        return cmod;
     }
 }

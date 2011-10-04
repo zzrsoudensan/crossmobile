@@ -14,9 +14,11 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-package org.crossmobile.source.utils;
+package org.crossmobile.source.out;
 
-public interface FinalizableObject {
+import org.crossmobile.source.ctype.CLibrary;
 
-    public void finalizeStructures();
+public interface Generator {
+
+    public abstract void generate(CLibrary library);
 }

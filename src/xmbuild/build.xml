@@ -2,4 +2,10 @@
 <project name="xmbuild" default="jar" basedir=".">
     <description>Builds, tests, and runs the project xmbuild.</description>
     <import file="nbproject/build-impl.xml"/>
+
+<!--	<target name="-pre-pre-compile">
+		<exec executable="/opt/local/bin/javacc" dir="src/org/crossmobile/source/parser" failonerror="true">
+			<arg value="ObjC.jj"/>
+		</exec>
+	</target>-->
 </project>

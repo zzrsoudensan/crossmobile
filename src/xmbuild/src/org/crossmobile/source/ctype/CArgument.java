@@ -18,10 +18,9 @@ package org.crossmobile.source.ctype;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.StringTokenizer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import org.crossmobile.source.parsers.SelectorParser.ArgumentResult;
+import org.crossmobile.source.ctype.CSelector.ArgumentResult;
 import org.crossmobile.source.guru.Reporter;
 import org.crossmobile.source.utils.StringUtils;
 
@@ -46,6 +45,7 @@ public class CArgument {
     }
 
     public static List<CArgument> getFunctionArgments(String block) {
+        block = block.trim();
         List<CArgument> res = new ArrayList<CArgument>();
         if (!block.isEmpty() && !block.equals("void")) {
             boolean isVarargs = block.contains("...");
@@ -57,12 +57,27 @@ public class CArgument {
                     Reporter.VARARGS_MISSING_COMMA.report(null, block);
             }
 
-            StringTokenizer tok = new StringTokenizer(block.trim(), ",");
-            while (tok.hasMoreTokens()) {
-                String token = tok.nextToken().trim();
+            String token;
+            int index = 1;
+            while (!block.isEmpty()) {
+                token = block.substring(0, StringUtils.searchForMatchingBlock(block, 0, ','));
+                block = block.substring(token.length());
+                if (token.endsWith(","))
+                    token = token.substring(0, token.length() - 1);
+
+                if (CType.isFunctionPointer(token, "argument"))
+                    token = "Object arg" + index;
+
+                // Replace [ with *
                 int pointers = StringUtils.count(token, '[');
                 pointers += StringUtils.count(token, '*');
                 token = token.replaceAll("(\\[.*?\\])|\\*", "").trim();
+
+                // Remove default values
+                String origtoken = token;
+                int lastEq = token.lastIndexOf('=');
+                if (lastEq >= 0)
+                    token = token.substring(0, lastEq).trim();
 
                 int word = StringUtils.findLastWord(token);
                 String arg = token.substring(word);
@@ -72,8 +87,9 @@ public class CArgument {
                     coretype = arg;
                 } else
                     coretype = token.substring(0, word);
-                String type = coretype + "*****".substring(0, pointers > 5 ? 5 : pointers) + (isVarargs && !tok.hasMoreTokens() ? "..." : "");
+                String type = coretype + "*****".substring(0, pointers > 5 ? 5 : pointers) + (isVarargs && block.isEmpty() ? "..." : "");
                 res.add(new CArgument(new CType(type), arg));
+                index++;
             }
         }
         return res;
@@ -115,8 +131,11 @@ public class CArgument {
         return new ArgumentResult(new CArgument(new CType(argtype), argname), namedarg);
     }
 
-    @Override
-    public String toString() {
-        return type.toString() + " " + name;
+    public String getName() {
+        return name;
+    }
+
+    public CType getType() {
+        return type;
     }
 }

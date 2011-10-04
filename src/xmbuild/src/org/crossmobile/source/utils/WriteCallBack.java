@@ -17,9 +17,8 @@
 package org.crossmobile.source.utils;
 
 import java.io.IOException;
-import java.io.Writer;
 
-public interface WritableObject {
+public interface WriteCallBack<T> {
 
-    public void writeTo(Writer out) throws IOException;
+    public void exec(T out) throws IOException;
 }

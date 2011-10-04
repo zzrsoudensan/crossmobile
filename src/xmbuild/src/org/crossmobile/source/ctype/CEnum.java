@@ -17,70 +17,65 @@
 package org.crossmobile.source.ctype;
 
 import java.util.List;
-import org.crossmobile.source.guru.Reporter;
 import org.crossmobile.source.utils.StringUtils;
 
 public class CEnum extends CProcedural {
 
-    protected final List<String> values;
+    private final List<String> values;
     private final boolean resetArgNames;
 
     public CEnum(String name, List<String> values, String original, String filename, boolean resetArgNames) {
         super(name, original, filename);
         this.values = values;
-        if (values.isEmpty())
-            throw new ArrayIndexOutOfBoundsException("Enumaration can not have an empty set");
         this.resetArgNames = resetArgNames;
-    }
-
-    @Override
-    public String toString() {
-        StringBuilder b = new StringBuilder("\n\tpublic static enum ");
-        b.append(getName()).append(" {\n\t\t");
-        for (String value : values)
-            b.append(value).append(", ");
-        b.delete(b.length() - 2, b.length());
-        b.append(";\n\t}\n");
-        return b.toString();
     }
 
     public boolean resetsArgNames() {
         return resetArgNames;
     }
 
-    public static void create(CLibrary parent, String entry) {
-        String orig = entry;
+    public List<String> getValues() {
+        return values;
+    }
+
+    @Override
+    public String toString() {
+        return "[" + getName() + " " + values + "]";
+    }
+
+    public static void create(CLibrary parent, boolean isTypedef, String entry) {
+        String original = entry;
         if (entry.startsWith("typedef"))
             entry = entry.substring(7).trim();
         if (entry.startsWith("extern"))
             entry = entry.substring(7).trim();
-        if (!entry.startsWith("enum"))
-            throw new RuntimeException(entry);
-        entry = entry.substring(4).trim();
-        if (entry.endsWith(";"))
+        if (entry.startsWith("enum"))
+            entry = entry.substring(4).trim();
+        if (entry.charAt(entry.length() - 1) == ';')
             entry = entry.substring(0, entry.length() - 1).trim();
 
+        if (entry.indexOf('{') < 0) {
+            if (isTypedef)
+                CExternal.create(parent, isTypedef, entry);
+            else if (StringUtils.findFirstWord(entry) != entry.length())
+                throw new RuntimeException("Unknown struct: " + original);
+        } else {
+            int begin = StringUtils.findFirstWord(entry);
+            int end = StringUtils.findLastWord(entry);
 
+            String corename = null;
+            if (begin >= 0 && end >= 0) {
+                corename = entry.substring(end);
+                String secondary = entry.substring(0, begin);
+                if (!corename.equals(secondary))
+                    CType.registerTypedef(corename, secondary);
+            } else if (begin >= 0)
+                corename = entry.substring(0, begin);
+            else if (end >= 0)
+                corename = entry.substring(end);
 
-        // Find begin enum name
-        String firstname = null;
-        int beginwordpos = StringUtils.findFirstWord(entry);
-        if (beginwordpos >= 0) {
-            firstname = entry.substring(0, beginwordpos);
-            entry = entry.substring(beginwordpos).trim();
+            if (corename != null)
+                parent.getObject(corename, false);
         }
-        if (!entry.startsWith("{"))
-            throw new RuntimeException(entry);
-
-        int upto = StringUtils.matchFromStart(entry, '{', '}');
-        if (upto < 0)
-            return;
-        String lastname = (upto + 1) < entry.length() ? entry.substring(upto, entry.length()) : null;
-        if (firstname == null && lastname == null)
-            // practically a typedef
-            return;
-        System.out.println(upto + (firstname == null ? "" : "firstname=" + firstname) + (lastname == null ? "" : (firstname == null ? "" : " ") + lastname));
-
-        Reporter.INHERITANCE.report(null, entry);
     }
 }

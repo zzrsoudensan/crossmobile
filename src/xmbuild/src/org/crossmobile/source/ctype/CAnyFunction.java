@@ -21,17 +21,13 @@ import java.util.List;
 
 public abstract class CAnyFunction {
 
-    protected final static String DUMMYBODY = "{\n\t\tthrow new RuntimeException(\"Stub\");\n\t}\n";
-    protected final static String ABSTRACTBODY = ";\n";
-    //
     private List<String> definition = new ArrayList<String>(2);
+    private final String name;
+    private final boolean isAbstract;
 
-    public String getJavadoc() {
-        StringBuilder b = new StringBuilder("\t/**\n");
-        for (String def : definition)
-            b.append("\t * ").append(def).append("\n");
-        b.append("\t */\n");
-        return b.toString();
+    public CAnyFunction(String name, boolean isAbstract) {
+        this.name = name;
+        this.isAbstract = isAbstract;
     }
 
     public void addDefinition(String definition) {
@@ -40,5 +36,17 @@ public abstract class CAnyFunction {
 
     public void appendDefinitions(CAnyFunction other) {
         definition.addAll(other.definition);
+    }
+
+    public Iterable<String> getDefinitions() {
+        return definition;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public boolean isAbstract() {
+        return isAbstract;
     }
 }

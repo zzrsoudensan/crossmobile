@@ -125,12 +125,12 @@ public class StringUtils {
 
     // Start form beginning
     public static int matchFromStart(String data, char open, char close) {
-        return matchBalanced(data, open, close, 1);
+        return matchBalanced(data, 0, open, close, 1);
     }
 
     // Start from end
     public static int matchFromEnd(String data, char open, char close) {
-        return matchBalanced(data, open, close, -1);
+        return matchBalanced(data, 0, open, close, -1);
     }
 
     /**
@@ -140,15 +140,16 @@ public class StringUtils {
      * or backward (end) searches. This is a feature, so that if the string is
      * not trim, it might break.
      * @param open opening character
+     * @param location location to start searching
      * @param close closing character
      * @param step -1 or 1: either to look backwards or forwards
      * @return location of the matching character
      */
-    private static int matchBalanced(String data, char open, char close, int step) {
-        if (data == null || data.length() == 0)
-            return -1;
+    public static int matchBalanced(String data, int location, char open, char close, int step) {
         int length = data.length();
-        int pos = step < 0 ? length - 1 : 0;
+        if (location >= length)
+            return -1;
+        int pos = step < 0 ? length - 1 : location;
         int reference = 0;
         char c;
         int start = pos;
@@ -157,7 +158,7 @@ public class StringUtils {
         boolean inDoubleQuote = false;
         boolean inQuotes = false;
 
-        while (pos >= 0 && pos < length) {
+        while (pos >= location && pos < length) {
             c = data.charAt(pos);
             if (c == '\'')
                 if (inSingleQuote) {
@@ -184,6 +185,68 @@ public class StringUtils {
             pos += step;
         }
         return -1;
+    }
+
+    public static int searchForMatchingBlock(String data, int start, char blockend) {
+        char c;
+        int pos = start;
+        int size = data.length();
+        int reference = 0;
+        boolean foundBlock = false;
+        boolean inSingleQuote = false;
+        boolean inDoubleQuote = false;
+        boolean inQuotes = false;
+
+        while (pos < size) {
+            c = data.charAt(pos++);
+            if (!inQuotes && reference == 0 && (c == blockend || foundBlock)) {
+                // Might have an ID which needs to be taken into account
+                if (c != blockend) {
+                    int newpos = pos;
+                    while (newpos < size && ((c = data.charAt(newpos)) == ' ' || c == '\n' || c == '\t' || c == '\r' || c == '\f'))
+                        newpos++;
+                    while (newpos < size && ((c = data.charAt(newpos)) == '_' || (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9')))
+                        newpos++;
+                    while (newpos < size && ((c = data.charAt(newpos)) == ' ' || c == '\n' || c == '\t' || c == '\r' || c == '\f'))
+                        newpos++;
+                    pos = (newpos < size && data.charAt(newpos) == ';') ? newpos + 1 : pos;
+                }
+                break;
+            } else
+                switch (c) {
+                    case '\'':
+                        if (inSingleQuote) {
+                            inSingleQuote = false;
+                            inQuotes = false;
+                        } else if (!inDoubleQuote) {
+                            inSingleQuote = true;
+                            inQuotes = true;
+                        }
+                        break;
+                    case '"':
+                        if (inDoubleQuote) {
+                            inDoubleQuote = false;
+                            inQuotes = false;
+                        } else if (!inSingleQuote) {
+                            inDoubleQuote = true;
+                            inQuotes = true;
+                        }
+                        break;
+                    case '{':
+                        if (!inQuotes)
+                            foundBlock = true;
+                    case '(':
+                        if (!inQuotes)
+                            reference++;
+                        break;
+                    case ')':
+                    case '}':
+                        if (!inQuotes)
+                            reference--;
+                        break;
+                }
+        }
+        return pos;
     }
 
     public static int count(String data, char what) {

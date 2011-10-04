@@ -16,14 +16,17 @@
 
 package org.crossmobile.source.ctype;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.StringTokenizer;
 import org.crossmobile.source.guru.Advisor;
 import org.crossmobile.source.guru.Reporter;
+import org.crossmobile.source.utils.StringUtils;
+import org.crossmobile.source.parser.Stream;
 
 public abstract class CSelector extends CAnyFunction {
 
-    protected final String name;
-    protected final List<CArgument> arguments;
+    private final List<CArgument> arguments;
     protected final List<String> nameParts;
 
     public static CSelector create(CObject parent, boolean isStatic, CType returnType, List<String> methodParts, List<CArgument> args) {
@@ -37,10 +40,10 @@ public abstract class CSelector extends CAnyFunction {
         returnType = fixGenericsConflict(returnType, args, signature);
         fixArgumentsIDConflict(parent, args, signature);
         if (constructor)
-            return new CConstructor(parent.getName(), args, methodParts, Advisor.constructorOverload(signature));
+            return new CConstructor(args, methodParts);
         else {
             returnType = fixReturnIDConflict(parent, isStatic, returnType, methodName, signature);
-            return new CMethod(isStatic, returnType, methodName, args, methodParts);
+            return new CMethod(methodName, parent.isProtocol(), args, methodParts, isStatic, returnType);
         }
     }
 
@@ -57,7 +60,7 @@ public abstract class CSelector extends CAnyFunction {
             if (newtype != null)
                 returnType = new CType(newtype);
             else {
-                // Check if this is a convenient function
+                // Check if this is a convenience selector
                 String simplename = parent.getName().toLowerCase().substring(2);
                 if (simplename.startsWith("mutable"))
                     simplename = simplename.substring(7);
@@ -101,14 +104,14 @@ public abstract class CSelector extends CAnyFunction {
                 }
     }
 
-    public CSelector(String name, List<CArgument> arguments, List<String> nameParts) {
-        this.name = name;
+    public CSelector(String name, boolean isAbstract, List<CArgument> arguments, List<String> nameParts) {
+        super(name, isAbstract);
         this.arguments = arguments;
         this.nameParts = nameParts;
     }
 
     public final String getSignature(String objectname) {
-        return getSignature(objectname, name, arguments);
+        return getSignature(objectname, getName(), arguments);
     }
 
     private static String getSignature(String parent, String name, List<CArgument> arguments) {
@@ -117,5 +120,55 @@ public abstract class CSelector extends CAnyFunction {
         for (CArgument arg : arguments)
             out.append(arg.type);
         return out.toString();
+    }
+
+    public List<CArgument> getArguments() {
+        return arguments;
+    }
+
+    public static void parse(CObject parent, Stream s) {
+        String fullText = s.consumeBlock();
+
+        boolean isStatic = fullText.charAt(0) == '+';
+        String body = fullText.substring(1, fullText.length() - 1).trim();
+
+        String rtrn = "id";
+        if (body.startsWith("(")) {
+            int param = StringUtils.matchFromStart(body, '(', ')');
+            rtrn = body.substring(1, param);
+            body = body.substring(param + 1);
+        }
+        CType returnType = new CType(rtrn);
+
+        List<CArgument> args = new ArrayList<CArgument>();
+        List<String> methodParts = new ArrayList<String>();
+        if (!body.contains(":"))
+            // No arguments, only method name
+            methodParts.add(body);
+        else {
+            // At least one argument: parsing
+            StringTokenizer tk = new StringTokenizer(body, ":");
+            methodParts.add(tk.nextToken().trim());  // Add first token as method name
+            while (tk.hasMoreTokens()) {
+                ArgumentResult res = CArgument.getSelectorArgument(tk.nextToken().trim());
+                args.add(res.argument);
+                methodParts.add(res.selectorPart);
+            }
+            methodParts.remove(methodParts.size() - 1); // Selectors end with argument definition, not argument name
+        }
+        CSelector sel = CSelector.create(parent, isStatic, returnType, methodParts, args);
+        sel.addDefinition(fullText);
+        parent.addSelector(sel);
+    }
+
+    public static class ArgumentResult {
+
+        private String selectorPart;
+        private CArgument argument;
+
+        public ArgumentResult(CArgument argument, String selectorPart) {
+            this.selectorPart = selectorPart;
+            this.argument = argument;
+        }
     }
 }

@@ -14,21 +14,28 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-package org.crossmobile.source.parsers;
+package org.crossmobile.source.parser;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+public enum BlockType {
 
-public abstract class Parser<P> {
-
-    public String parse(P parent, String entry) {
-        Matcher m = getPattern().matcher(entry.toString());
-        while (m.find())
-            match(parent, m);
-        return m.replaceAll("");
-    }
-
-    protected abstract Pattern getPattern();
-
-    protected abstract void match(P parent, Matcher m);
+    OPTIONAL,
+    REQUIRED,
+    OBJECTSTART,
+    PROTOCOLSTART,
+    SELECTOR,
+    PROPERTY,
+    OBJECTEND,
+    TYPEDEFENUM,
+    TYPEDEFFUNCTION,
+    TYPEDEFSTRUCT,
+    TYPEDEFUNION,
+    TYPEDEFEXTERNAL,
+    ENUM,
+    FUNCTION,
+    STRUCT,
+    UNION,
+    EXTERNAL,
+    EOF,
+    NAMESPACE,
+    UNKNOWN;
 }

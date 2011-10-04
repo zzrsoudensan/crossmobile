@@ -17,40 +17,34 @@
 package org.crossmobile.source.ctype;
 
 import java.util.List;
+import org.crossmobile.source.guru.Advisor;
 
 public class CConstructor extends CSelector {
 
-    private final String objname;
-    private final CEnum overloadenum;
+    private CEnum overloadenum;
+    private boolean isOverloaded = false;
 
-    public CConstructor(String objname, List<CArgument> arguments, List<String> nameparts, CEnum overloadenum) {
-        super("", arguments, nameparts);
-        this.objname = objname;
-        this.overloadenum = overloadenum;
-        if (overloadenum != null && overloadenum.resetsArgNames())
-            for (int i = 0; i < arguments.size(); i++)
-                arguments.get(i).name = "arg" + (i + 1);
-    }
-
-    @Override
-    public String toString() {
-        StringBuilder out = new StringBuilder("\n");
-        out.append(getJavadoc());
-        out.append("\tpublic ").append(objname).append("(").append(CArgument.fromList(arguments));
-        if (overloadenum != null) {
-            if (!arguments.isEmpty())
-                out.append(", ");
-            out.append(objname).append(".").append(overloadenum.getName()).append(" ").append(overloadenum.getName().toLowerCase());
-        }
-        out.append(") {}\n");
-        return out.toString();
+    public CConstructor(List<CArgument> arguments, List<String> nameparts) {
+        super("", false, arguments, nameparts);
     }
 
     public boolean isOverloaded() {
-        return overloadenum != null;
+        return isOverloaded;
     }
 
-    public String getEnumAsString() {
-        return overloadenum == null ? "" : overloadenum.toString();
+    public CEnum getEnum() {
+        return overloadenum;
+    }
+
+    public void updateEnum(String signature) {
+        overloadenum = Advisor.constructorOverload(signature);
+        if (overloadenum != null) {
+            isOverloaded = true;
+            if (overloadenum.getName().equals(""))  // No name means we simply ignore these constructor enumerations
+                overloadenum = null;
+            else if (overloadenum.resetsArgNames())
+                for (int i = 0; i < getArguments().size(); i++)
+                    getArguments().get(i).name = "arg" + (i + 1);
+        }
     }
 }

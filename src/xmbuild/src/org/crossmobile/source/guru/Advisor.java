@@ -40,8 +40,10 @@ public class Advisor extends DefaultHandler {
     private static final Map<String, String> returnID = new HashMap<String, String>();
     private static final Map<String, Integer> genericsSupport = new HashMap<String, Integer>();
     private static final Set<String> nativeTypes = new HashSet<String>();
+    private static final Set<Tuple> typedefs = new HashSet<Tuple>();
     private static final List<Tuple> removables = new ArrayList<Tuple>();
-    private static final Map<String, String> canonicals = new HashMap<String, String>();
+    private static final Map<String, String> constantCanonicals = new HashMap<String, String>();
+    private static final Map<String, String> methodCanonicals = new HashMap<String, String>();
     private static final Set<String> delegatePatterns = new HashSet<String>();
     //
     private String argsig;
@@ -82,7 +84,7 @@ public class Advisor extends DefaultHandler {
         if (qName.equals("native"))
             nativeTypes.add(at.getValue("type"));
         else if (qName.equals("typedef"))
-            CType.registerTypedef(at.getValue("java"), at.getValue("c"));
+            typedefs.add(new Tuple(at.getValue("java"), at.getValue("c")));
         else if (qName.equals("genericsclass"))
             genericsSupport.put(at.getValue("class"), Integer.parseInt(at.getValue("items")));
         else if (qName.equals("returnid"))
@@ -105,8 +107,10 @@ public class Advisor extends DefaultHandler {
             if (replaceTo == null)
                 replaceTo = "";
             removables.add(new Tuple(at.getValue("pattern"), replaceTo));
-        } else if (qName.equals("canonical"))
-            canonicals.put(at.getValue("type"), at.getValue("target"));
+        } else if (qName.equals("constant"))
+            constantCanonicals.put(at.getValue("prefix"), at.getValue("target"));
+        else if (qName.equals("method"))
+            methodCanonicals.put(at.getValue("signature"), at.getValue("name"));
         else if (qName.equals("delegate"))
             delegatePatterns.add(at.getValue("pattern"));
     }
@@ -118,7 +122,7 @@ public class Advisor extends DefaultHandler {
             argsig = null;
             argids = null;
         } else if (qName.equals("constructor")) {
-            if (conids.size() < 2)
+            if (conids.size() < 2 && !conname.equals(""))
                 Reporter.ADVISOR_LOADING_ERROR.report(null, "node coverload needs at least 2 subnodes to be valid");
             constructorOverload.put(consig, new CEnum(conname, conids, "Advisor", lastfile, conreset));
             consig = null;
@@ -154,12 +158,21 @@ public class Advisor extends DefaultHandler {
         return data;
     }
 
-    public static Map<String, String> getCanonicals() {
-        return canonicals;
+    public static Map<String, String> getConstantCanonicals() {
+        return constantCanonicals;
+    }
+
+    public static String getMethodCanonical(String signature) {
+        return methodCanonicals.get(signature);
     }
 
     public static Set<String> getDelegatePatterns() {
         return delegatePatterns;
+    }
+
+    public static void addDefaultTypedefs() {
+        for (Tuple item : typedefs)
+            CType.registerTypedef(item.name, item.value);
     }
 
     private static class Tuple {

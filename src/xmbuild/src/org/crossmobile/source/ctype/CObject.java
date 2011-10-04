@@ -16,21 +16,19 @@
 
 package org.crossmobile.source.ctype;
 
-import java.io.IOException;
-import java.io.Writer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.StringTokenizer;
 import org.crossmobile.source.guru.Advisor;
 import org.crossmobile.source.guru.Oracle;
 import org.crossmobile.source.guru.Reporter;
-import org.crossmobile.source.utils.FinalizableObject;
-import org.crossmobile.source.utils.WritableObject;
+import org.crossmobile.source.parser.Stream;
 
-public class CObject implements WritableObject, FinalizableObject {
+public class CObject {
 
     private final CLibrary library;
     private final String name;
@@ -43,8 +41,9 @@ public class CObject implements WritableObject, FinalizableObject {
     private boolean hasConstructorEnums = false;
     private boolean hasStaticMethods = false;
     private boolean hasInstanceMethods = false;
-    private String superclass = null;
-    private Set<String> interfaces = new HashSet<String>();
+    private boolean hasProperties = false;
+    private CType superclass = null;
+    private Set<CType> interfaces = new HashSet<CType>();
 
     public CObject(CLibrary library, String name, boolean isProtocol) {
         this.library = library;
@@ -66,99 +65,58 @@ public class CObject implements WritableObject, FinalizableObject {
     }
 
     public void addSelector(CSelector sel) {
-        String signature = sel.getSignature(name);
-        if (sel instanceof CConstructor) {
-            CConstructor con = (CConstructor) sel;
-            // Check for overloaded constructors
-            for (CConstructor other : constructors)
-                if (other.getSignature(name).equals(signature))
-                    if (con.isOverloaded()) {
-                        hasConstructorEnums = true;
-                        other.appendDefinitions(con);
-                        return;
-                    } else {
-                        Reporter.UNKNOWN_OVERRIDE.report("constructor", signature);
-                        return;
-                    }
-            constructors.add(con);
-        } else {
+        boolean isConstructor = sel instanceof CConstructor;
+
+        // First check if this is a constructor in an interface               
+        if (isProtocol && isConstructor) {
+            Reporter.CONSTRUCTOR_IN_INTERFACE.report("object " + name, sel.getSignature(name));
+            return; // Not valid
+        }
+
+        if (isConstructor)
+            constructors.add((CConstructor) sel);
+        else {
             CMethod meth = (CMethod) sel;
             if (meth.isStatic()) {
                 hasStaticMethods = true;
                 if (isProtocol)
-                    Reporter.STATIC_INTERFACE.report(null, signature);
-            } else
+                    Reporter.STATIC_INTERFACE.report(null, sel.getSignature(name));
+            } else if (!meth.isProperty())
                 hasInstanceMethods = true;
             methods.add(meth);
         }
     }
 
     public void addProperty(CProperty pro) {
+        CMethod m;
+        List<String> names;
+
+        names = new ArrayList<String>();
+        names.add(pro.getGetterName());
+        m = new CMethod(pro.getGetterName(), pro.isAbstract(), new ArrayList<CArgument>(), names, false, pro.getType());
+        for (String def : pro.getDefinitions())
+            m.addDefinition(def);
+        m.setProperty();
+        addSelector(m);
+
+        if (pro.getSetterName() != null) {
+            List<CArgument> setargs = new ArrayList<CArgument>();
+            setargs.add(new CArgument(pro.getType(), pro.getName()));
+            names = new ArrayList<String>();
+            names.add(pro.getSetterName());
+
+            m = new CMethod(pro.getSetterName(), pro.isAbstract(), setargs, names, false, new CType("void"));
+            m.setProperty();
+            for (String def : pro.getDefinitions())
+                m.addDefinition(def);
+            addSelector(m);
+        }
+        hasProperties = true;
         properties.add(pro);
     }
 
     public String getName() {
         return name;
-    }
-
-    @Override
-    public String toString() {
-        StringBuilder out = new StringBuilder();
-
-        // Add package description
-        out.append("package ").append(library.getPackagename()).append(";\n\n");
-
-        String type = isProtocol ? (hasOptionalMethod ? "abstract class" : "interface") : "class";
-        out.append("public ").append(type).append(" ");
-
-        out.append(name);
-        if (genericsCount > 0) {
-            out.append("<");
-            for (int i = 0; i < genericsCount; i++)
-                out.append((char) ('A' + i)).append(",");
-            out.delete(out.length() - 1, out.length());
-            out.append(">");
-        }
-        if (superclass != null)
-            out.append(" extends ").append(superclass);
-        if (interfaces.size() > 0) {
-            out.append(" implements ");
-            for (String interf : interfaces)
-                out.append(interf).append(", ");
-            out.delete(out.length() - 2, out.length());
-        }
-        out.append(" {\n");
-
-        if (hasConstructorEnums)
-            out.append("\n\t/*\n\t * Initialization enumerations \n\t */\n");
-        for (CConstructor c : constructors)
-            out.append(c.getEnumAsString());
-
-        if (hasStaticMethods)
-            out.append("\n\t/*\n\t * Static methods\n\t */\n");
-        for (CMethod m : methods)
-            if (m.isStatic())
-                out.append(m.toString());
-
-        if (constructors.size() > 0) {
-            out.append("\n\t/*\n\t * Constructors\n\t */\n");
-            for (CConstructor c : constructors)
-                out.append(c);
-        }
-
-        if (properties.size() > 0)
-            out.append("\n\t/*\n\t * Properties\n\t */\n");
-        for (CProperty p : properties)
-            out.append(p.toString(isProtocol));
-
-        if (hasInstanceMethods)
-            out.append("\n\t/*\n\t * Instance methods\n\t */\n");
-        for (CMethod m : methods)
-            if (!m.isStatic())
-                out.append(m.toString(isProtocol));
-
-        out.append("}\n");
-        return out.toString();
     }
 
     public int getGenericsCount() {
@@ -170,36 +128,84 @@ public class CObject implements WritableObject, FinalizableObject {
     }
 
     public void setSuperclass(String superclass) {
-        this.superclass = superclass;
+        this.superclass = new CType(superclass);
     }
 
     public void addInterface(String interf) {
-        interfaces.add(interf);
+        if (interf.equals("NSObject"))
+            return;
+        interfaces.add(new CType(interf));
     }
 
-    @Override
-    public void writeTo(Writer out) throws IOException {
-        out.write(toString());
+    public boolean isProtocol() {
+        return isProtocol;
     }
 
-    @Override
-    public void finalizeStructures() {
+    public boolean hasOptionalMethod() {
+        return hasOptionalMethod;
+    }
+
+    public void finalizeObject() {
+        /*
+         * Fix Constructors
+         */
+        CConstructor base, running;
+        String basesig;
+        Set<CConstructor> doubles = new HashSet<CConstructor>();
+        for (int i = 0; i < constructors.size() - 1; i++) {
+            base = constructors.get(i);
+            basesig = base.getSignature(name);
+            for (int j = i + 1; j < constructors.size(); j++) {
+                running = constructors.get(j);
+                if (!doubles.contains(running) && running.getSignature(name).equals(basesig)) {
+                    base.updateEnum(basesig);  // The enumaration definition happens HERE, because we want to finish with typedefs first and be sure that an override REALLY exists
+                    if (base.isOverloaded()) {
+                        if (base.getEnum() != null) // Might be overloaded but we don't support this in Java
+                            hasConstructorEnums = true;
+                        for (String def : running.getDefinitions())
+                            base.addDefinition(def);
+                        doubles.add(running);
+                    } else
+                        Reporter.UNKNOWN_OVERRIDE.report("constructor " + basesig,
+                                base.getDefinitions().iterator().next()
+                                + " ## "
+                                + running.getDefinitions().iterator().next());
+                }
+            }
+        }
+        for (CConstructor obs : doubles)
+            constructors.remove(obs);
+
+
+        /*
+         * Fix Methods
+         */
+
         // Search if this is a delegate, so that the selector name aggregator will be more aggressive
         boolean isDelegate = false;
         for (String pattern : Advisor.getDelegatePatterns())
             isDelegate |= name.matches(pattern);
 
         Map<String, List<CMethod>> maps = new HashMap<String, List<CMethod>>();
+        List<CMethod> toRemove = new ArrayList<CMethod>();
 
         // Put methods in order
         for (CMethod m : methods) {
-            String key = isDelegate ? m.nameParts.get(0) : m.getSignature("");  // if it is a delegate, group by first type, to minimize namespace pollution
-            List<CMethod> list = maps.get(key);
-            if (list == null) {
-                list = new ArrayList<CMethod>();
-                maps.put(key, list);
+            String givenName = Advisor.getMethodCanonical((m.isStatic() ? "+" : "-") + m.getSignature(name));
+            if (givenName != null)
+                if (givenName.equals(""))
+                    toRemove.add(m);
+                else
+                    m.setCanonicalName(givenName);
+            else {
+                String key = isDelegate ? m.nameParts.get(0) : m.getSignature("");  // if it is a delegate, group by first type, to minimize namespace pollution
+                List<CMethod> list = maps.get(key);
+                if (list == null) {
+                    list = new ArrayList<CMethod>();
+                    maps.put(key, list);
+                }
+                list.add(m);
             }
-            list.add(m);
         }
 
         // find conflicting methods
@@ -223,5 +229,75 @@ public class CObject implements WritableObject, FinalizableObject {
                         conflict.get(i).setCanonicalName(newnames.get(i));
                 }
             }
+
+        // Remove methods which are not valid
+        for (CMethod m : toRemove)
+            methods.remove(m);
+    }
+
+    public CType getSuperclass() {
+        return superclass;
+    }
+
+    public Set<CType> getInterfaces() {
+        return interfaces;
+    }
+
+    public boolean hasConstructorEnums() {
+        return hasConstructorEnums;
+    }
+
+    public List<CConstructor> getConstructors() {
+        return constructors;
+    }
+
+    public boolean hasStaticMethods() {
+        return hasStaticMethods;
+    }
+
+    public Iterable<CMethod> getMethods() {
+        return methods;
+    }
+
+    public boolean hasConstructors() {
+        return constructors.size() > 0;
+    }
+
+    public boolean hasInstanceMethods() {
+        return hasInstanceMethods;
+    }
+
+    public boolean hasProperties() {
+        return hasProperties;
+    }
+
+    public static CObject parse(CLibrary parent, boolean protocol, Stream s) {
+        String name = s.consumeID();
+        Reporter.setObject(name);
+
+        CObject obj = parent.getObject(name, protocol);
+
+        // Remove categories
+        if (s.peekChar() == '(')
+            s.consumeBalanced('(', ')');
+
+        // Find superclass
+        if (s.peekChar() == ':') {
+            s.consumeChars(1);
+            obj.setSuperclass(s.consumeID());
+        }
+
+        // Find interfaces
+        if (s.peekChar() == '<') {
+            String interfs = s.consumeBalanced('<', '>');
+            interfs = interfs.substring(1, interfs.length() - 1).trim();
+            StringTokenizer tk = new StringTokenizer(interfs, ",");
+            while (tk.hasMoreTokens())
+                obj.addInterface(tk.nextToken().trim());
+        }
+        if (s.peekChar() == '{')
+            s.consumeBalanced('{', '}');
+
+        return obj;
     }
 }

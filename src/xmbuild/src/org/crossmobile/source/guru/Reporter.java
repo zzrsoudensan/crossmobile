@@ -16,17 +16,15 @@
 
 package org.crossmobile.source.guru;
 
-import java.io.IOException;
-import java.io.Writer;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.StringTokenizer;
-import org.crossmobile.source.utils.WritableObject;
+import org.crossmobile.source.ctype.CObject;
 
-public enum Reporter implements WritableObject {
+public enum Reporter {
 
-    RESIDUE_WHILE_PARSING,
+    UNKNOWN_BLOCK,
     ARGUMENT_PARSING,
     MISMATCH_ID_RESOLVER,
     STATIC_INTERFACE,
@@ -38,30 +36,12 @@ public enum Reporter implements WritableObject {
     VARARGS_MISSING_COMMA,
     PROPERTY_ERROR,
     PROCEDURAL_PROBLEM,
-    GROUPING_ERROR;
+    GROUPING_ERROR,
+    CONSTRUCTOR_IN_INTERFACE;
     //
+    public final LinkedHashMap<Tuplet, List<Tuplet>> notepad = new LinkedHashMap<Tuplet, List<Tuplet>>();
     private static String file;
     private static String object;
-    private final LinkedHashMap<Tuplet, List<Tuplet>> notepad = new LinkedHashMap<Tuplet, List<Tuplet>>();
-
-    @Override
-    public void writeTo(Writer out) throws IOException {
-        if (notepad.isEmpty())
-            return;
-        for (Tuplet ctx : notepad.keySet()) {
-            out.append("<context file=\"").append(ctx.item).append("\"");
-            if (ctx.value != null)
-                out.append(" object=\"").append(ctx.value).append("\"");
-            out.append(">\n");
-            for (Tuplet item : notepad.get(ctx)) {
-                out.append("\t<item");
-                if (item.item != null && !item.item.equals(""))
-                    out.append(" info=\"").append(item.item).append("\"");
-                out.append(">").append(item.value).append("</item>\n");
-            }
-            out.append("</context>\n");
-        }
-    }
 
     public static void setFile(String file) {
         Reporter.file = file;
@@ -86,21 +66,21 @@ public enum Reporter implements WritableObject {
         block.add(new Tuplet(info, value));
     }
 
-    public static void addResidue(String info, String residue) {
+    public static void addUnknownItem(CObject obj, String item) {
         StringBuilder out = new StringBuilder();
-        StringTokenizer tk = new StringTokenizer(residue, ";", false);
+        StringTokenizer tk = new StringTokenizer(item, ";", false);
         while (tk.hasMoreTokens()) {
             String token = tk.nextToken().trim();
             if (token.length() > 0)
                 out.append(token.trim()).append(";\n");
         }
-        RESIDUE_WHILE_PARSING.report(info, out.toString());
+        UNKNOWN_BLOCK.report(obj != null ? "object " + obj.getName() : null, out.toString());
     }
 
-    private static class Tuplet {
+    public static class Tuplet {
 
-        String item;
-        String value;
+        public final String item;
+        public final String value;
 
         public Tuplet(String item, String value) {
             this.item = item;

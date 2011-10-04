@@ -62,12 +62,12 @@ public final class FileUtils {
         return status;
     }
 
-    public static void putFile(File file, WritableObject in) {
+    public static void putFile(File file, WriteCallBack<Writer> callBack) {
         file.getParentFile().mkdirs();
         Writer out = null;
         try {
             out = new OutputStreamWriter(new FileOutputStream(file), "UTF-8");
-            in.writeTo(out);
+            callBack.exec(out);
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         } finally {

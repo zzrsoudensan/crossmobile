@@ -16,9 +16,47 @@
 
 package org.crossmobile.source.ctype;
 
-public class CStruct {
+import org.crossmobile.source.utils.StringUtils;
 
-    public static void create(CLibrary parent, String entry) {
-        //     throw new UnsupportedOperationException("Not yet implemented");
+public class CStruct extends CProcedural {
+
+    public CStruct(String name, String original, String filename) {
+        super(name, original, filename);
+    }
+
+    public static void create(CLibrary parent, boolean isTypedef, String entry) {
+        String original = entry;
+        if (entry.startsWith("typedef"))
+            entry = entry.substring(7).trim();
+        if (entry.startsWith("extern"))
+            entry = entry.substring(7).trim();
+        if (entry.startsWith("struct"))
+            entry = entry.substring(6).trim();
+        if (entry.charAt(entry.length() - 1) == ';')
+            entry = entry.substring(0, entry.length() - 1).trim();
+
+        String corename = null;
+        if (entry.indexOf('{') < 0)
+            if (isTypedef) {
+                int namepos = StringUtils.findLastWord(entry);
+                corename = CType.registerTypedef(entry.substring(0, namepos).trim(), entry.substring(namepos).trim());
+            } else if (StringUtils.findFirstWord(entry) == entry.length())
+                return;
+            else
+                throw new RuntimeException("Unknown struct: " + original);
+        else {
+            int begin = StringUtils.findFirstWord(entry);
+            int end = StringUtils.findLastWord(entry);
+
+            if (begin >= 0 && end >= 0)
+                corename = CType.registerTypedef(entry.substring(end), entry.substring(0, begin));
+            else if (begin >= 0)
+                corename = entry.substring(0, begin);
+            else if (end >= 0)
+                corename = entry.substring(end);
+            else
+                throw new RuntimeException("struct without name: " + original);
+        }
+        parent.getObject(corename, false);
     }
 }
