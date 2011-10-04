@@ -5,5 +5,6 @@
     <typedef name="xmprop" classname="org.crossmobile.ant.PropertiesCreator" onerror="fail"/>
     <typedef name="xmswing" classname="org.crossmobile.ant.SynchronizeSwing" onerror="fail"/>
     <typedef name="xmconcat" classname="org.crossmobile.ant.ConcatenateLibraries" onerror="fail"/>
-    <typedef name="xmskeleton" classname="org.crossmobile.ant.SkeletonCreator" onerror="fail"/>
+    <typedef name="xmjskeleton" classname="org.crossmobile.ant.JavaSkeletonCreator" onerror="fail"/>
+    <typedef name="xmskeleton" classname="org.crossmobile.ant.ObjCSkeletonCreator" onerror="fail"/>
 </antlib>

@@ -36,7 +36,7 @@ import org.apache.tools.ant.AntClassLoader;
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.Task;
 
-public class SkeletonCreator extends Task {
+public class JavaSkeletonCreator extends Task {
 
     private String pkgname;
     private File extrapath;
