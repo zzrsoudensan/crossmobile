@@ -20,6 +20,8 @@
 
 <advisor>
     <natives> <!-- Java native types -->
+        <native type="void"/>
+        <native type="boolean"/>
         <native type="byte"/>
         <native type="short"/>
         <native type="int"/>
@@ -27,6 +29,7 @@
         <native type="float"/>
         <native type="double"/>
         <native type="char"/>
+        <native type="Object"/>
     </natives>
     
     <!-- Pre-set typedefs -->
@@ -36,6 +39,8 @@
         <typedef java="List" c="NSMutableArray"/>
         <typedef java="Set" c="NSMutableSet"/>
         <typedef java="Set" c="NSSet"/>
+        <typedef java="Map" c="NSDictionary"/>
+        <typedef java="Map" c="NSMutableDictionary"/>
         <typedef java="byte" c="char"/>
         <typedef java="Object" c="id"/>
         <typedef java="boolean" c="BOOL"/>
@@ -269,12 +274,15 @@
     </conflicts>
     
     <!-- Used in procedurals while naming parsing, to eliminate inconsistencies -->
-    <canonicals>
+    <namechanges>
         <!-- constant canonicals: use these entries to trim the beginning of a constant with a value more meaninful in Java -->
-        <constant prefix="k" target=""/>
-        <constant prefix="al" target="Al"/>
-        <constant prefix="alc" target="Alc"/>       
-    </canonicals>
+        <namechange prefix="k"/>
+        <namechange prefix="al" to="Al"/>
+        <namechange prefix="alc" to="Alc"/>
+        <namechange prefix="__"/>
+        <namechange prefix="_" />
+        <namechange prefix="opaque"/>
+    </namechanges>
     
     <!-- Used in CObject, to define that an object is a delegate, so that the selector names should be more agressively trimmed -->
     <delegates>

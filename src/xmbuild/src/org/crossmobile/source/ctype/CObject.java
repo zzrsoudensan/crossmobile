@@ -28,10 +28,11 @@ import org.crossmobile.source.guru.Oracle;
 import org.crossmobile.source.guru.Reporter;
 import org.crossmobile.source.parser.Stream;
 
-public class CObject {
+public class CObject extends CAny {
 
     private final CLibrary library;
-    private final String name;
+    private CType superclass = null;
+    private Set<CType> interfaces = new HashSet<CType>();
     private final boolean isProtocol;
     private boolean hasOptionalMethod = false;
     private List<CConstructor> constructors = new ArrayList<CConstructor>();
@@ -42,12 +43,12 @@ public class CObject {
     private boolean hasStaticMethods = false;
     private boolean hasInstanceMethods = false;
     private boolean hasProperties = false;
-    private CType superclass = null;
-    private Set<CType> interfaces = new HashSet<CType>();
+    private List<CArgument> variables = new ArrayList<CArgument>();
+    private List<CStruct> structs = new ArrayList<CStruct>();
 
     public CObject(CLibrary library, String name, boolean isProtocol) {
+        super(name, true);
         this.library = library;
-        this.name = name;
         this.isProtocol = isProtocol;
         genericsCount = Advisor.genericsSupport(name);
     }
@@ -101,7 +102,7 @@ public class CObject {
 
         if (pro.getSetterName() != null) {
             List<CArgument> setargs = new ArrayList<CArgument>();
-            setargs.add(new CArgument(pro.getType(), pro.getName()));
+            setargs.add(new CArgument(pro.getType(), pro.name));
             names = new ArrayList<String>();
             names.add(pro.getSetterName());
 
@@ -273,9 +274,8 @@ public class CObject {
 
     public static CObject parse(CLibrary parent, boolean protocol, Stream s) {
         String name = s.consumeID();
-        Reporter.setObject(name);
-
-        CObject obj = parent.getObject(name, protocol);
+        CObject obj = protocol ? parent.getInterface(name) : parent.getObject(name);
+        Reporter.setObject(obj);
 
         // Remove categories
         if (s.peekChar() == '(')
@@ -297,7 +297,26 @@ public class CObject {
         }
         if (s.peekChar() == '{')
             s.consumeBalanced('{', '}');
+        if (s.peekChar() == ';')
+            s.consumeChars(1);
 
         return obj;
+    }
+
+    public Iterable<CStruct> getStructures() {
+        return structs;
+    }
+
+    public Iterable<CArgument> getVariables() {
+        return variables;
+    }
+
+    protected void addVariable(CArgument arg, boolean isProtected) {
+        if (!variables.contains(arg))
+            variables.add(arg);
+    }
+
+    public boolean hasVariables() {
+        return !variables.isEmpty();
     }
 }

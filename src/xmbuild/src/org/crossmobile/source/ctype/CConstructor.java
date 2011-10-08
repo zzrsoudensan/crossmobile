@@ -16,6 +16,7 @@
 
 package org.crossmobile.source.ctype;
 
+import java.util.ArrayList;
 import java.util.List;
 import org.crossmobile.source.guru.Advisor;
 
@@ -42,9 +43,13 @@ public class CConstructor extends CSelector {
             isOverloaded = true;
             if (overloadenum.getName().equals(""))  // No name means we simply ignore these constructor enumerations
                 overloadenum = null;
-            else if (overloadenum.resetsArgNames())
-                for (int i = 0; i < getArguments().size(); i++)
-                    getArguments().get(i).name = "arg" + (i + 1);
+            else if (overloadenum.resetsArgNames()) {
+                List<CArgument> cargs = getArguments();
+                List<CArgument> args = new ArrayList<CArgument>(cargs);
+                cargs.clear();
+                for (int i = 0; i < args.size(); i++)
+                    cargs.add(new CArgument(args.get(i).type, "arg" + (i + 1)));
+            }
         }
     }
 }

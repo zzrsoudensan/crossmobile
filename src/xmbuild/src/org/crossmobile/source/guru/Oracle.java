@@ -39,29 +39,13 @@ public class Oracle {
         int to = 0;
         boolean wasInLower = false;
         char c;
+        data = nameBeautifier(data);
         while (to < data.length()) {
             c = data.charAt(to);
             if (c >= 'A' && c <= 'Z') {
                 if (wasInLower) {
                     wasInLower = false;
-                    String part = data.substring(from, to);
-                    if (res.isEmpty()) {// first item should not be lower case - take care of this
-                        boolean found = false;
-                        Map<String, String> canonicals = Advisor.getConstantCanonicals();
-                        for (String type : canonicals.keySet())
-                            if (part.equals(type)) {
-                                found = true;
-                                part = canonicals.get(type);
-                                continue;
-                            }
-                        if (!found) {
-                            char t = part.charAt(0);
-                            if (t >= 'a' && t <= 'z')
-                                Reporter.GROUPING_ERROR.report("unknown first lower case block", data);
-                        }
-                    }
-                    if (!part.isEmpty())
-                        res.add(part);
+                    res.add(data.substring(from, to));
                     from = to;
                 }
             } else if (c >= 'a' && c <= 'z' && !wasInLower)
@@ -71,6 +55,25 @@ public class Oracle {
         if (from < to)
             res.add(data.substring(from, to));
         return res;
+    }
+
+    public static String nameBeautifier(String name) {
+        if (name.isEmpty())
+            return name;
+
+        String orig = name;
+        Map<String, String> newnames = Advisor.getNameChanges();
+        for (String replace : newnames.keySet())
+            if (name.startsWith(replace)) {
+                name = newnames.get(replace) + name.substring(replace.length());
+                continue;
+            }
+        char t = name.charAt(0);
+        if (!(t >= 'A' && t <= 'Z') && !Advisor.isNativeType(name))
+            Reporter.GROUPING_ERROR.report("unsupported character", orig);
+        if (name.isEmpty())
+            throw new NullPointerException("Name is empty (original is " + orig + ")");
+        return name;
     }
 
     /**

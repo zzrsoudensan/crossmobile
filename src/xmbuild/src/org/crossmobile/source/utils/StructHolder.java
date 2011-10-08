@@ -14,30 +14,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-package org.crossmobile.source.parser;
+package org.crossmobile.source.utils;
 
-public enum BlockType {
-
-    OPTIONAL,
-    REQUIRED,
-    OBJECTSTART,
-    PROTOCOLSTART,
-    SELECTOR,
-    PROPERTY,
-    OBJECTEND,
-    TYPEDEFENUM,
-    TYPEDEFFUNCTION,
-    TYPEDEFSTRUCT,
-    TYPEDEFUNION,
-    TYPEDEFEXTERNAL,
-    ENUM,
-    FUNCTION,
-    STRUCT,
-    UNION,
-    EXTERNAL,
-    EOF,
-    NAMESPACE,
-    OPENBRACKET,
-    CLOSEBRACKET,
-    UNKNOWN;
+public interface StructHolder {
 }

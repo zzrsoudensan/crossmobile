@@ -47,8 +47,8 @@ public enum Reporter {
         Reporter.file = file;
     }
 
-    public static void setObject(String object) {
-        Reporter.object = object;
+    public static void setObject(CObject object) {
+        Reporter.object = object == null ? null : object.getName();
     }
 
     public void report(String info, String value) {

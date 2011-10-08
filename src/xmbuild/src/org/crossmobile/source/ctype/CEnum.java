@@ -56,7 +56,7 @@ public class CEnum extends CProcedural {
 
         if (entry.indexOf('{') < 0) {
             if (isTypedef)
-                CExternal.create(parent, isTypedef, entry);
+                CArgument.create(parent, parent, isTypedef, entry);
             else if (StringUtils.findFirstWord(entry) != entry.length())
                 throw new RuntimeException("Unknown struct: " + original);
         } else {
@@ -75,7 +75,7 @@ public class CEnum extends CProcedural {
                 corename = entry.substring(end);
 
             if (corename != null)
-                parent.getObject(corename, false);
+                CType.registerTypedef("int", corename);
         }
     }
 }

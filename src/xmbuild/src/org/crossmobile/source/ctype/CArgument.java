@@ -22,18 +22,32 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.crossmobile.source.ctype.CSelector.ArgumentResult;
 import org.crossmobile.source.guru.Reporter;
+import org.crossmobile.source.utils.FieldHolder;
+import org.crossmobile.source.utils.ListOfArguments;
 import org.crossmobile.source.utils.StringUtils;
 
-public class CArgument {
+public class CArgument extends CAny {
 
     private static final Pattern varargs = Pattern.compile(",\\s*+\\.\\.\\.");
     //
     CType type; // Should not be final to fix id conflicts & Generics
-    String name;    // Should not be final, so that name subtitution in constructor can be performed (i.e. in UIColor)
 
     public CArgument(CType type, String name) {
+        super(name, false);
         this.type = type;
-        this.name = name;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof CArgument))
+            return false;
+        CArgument other = (CArgument) obj;
+        return name.equals(other.name);
+    }
+
+    @Override
+    public int hashCode() {
+        return name.hashCode();
     }
 
     public static String fromList(List<CArgument> args) {
@@ -127,12 +141,42 @@ public class CArgument {
             argname = block;
         if (argname.contains(" "))
             Reporter.ARGUMENT_PARSING.report("found to contain spaces ", argname);
-
+        if (CType.isFunctionPointer(argtype, "argument"))
+            argtype = CType.FUNCPOINT;
         return new ArgumentResult(new CArgument(new CType(argtype), argname), namedarg);
     }
 
-    public String getName() {
-        return name;
+    public static void create(CLibrary lib, FieldHolder parent, boolean istypedef, String entry) {
+        String original = entry;
+        entry = entry.trim();
+        if (entry.contains("typedef"))
+            entry = entry.replaceAll("typedef", "").replaceAll("  ", " ").trim();
+        if (entry.charAt(entry.length() - 1) == ';')
+            entry = entry.substring(0, entry.length() - 1).trim();
+        if (entry.length() == 0)
+            return;
+
+        int last = StringUtils.findLastWord(entry);
+        String name = entry.substring(last).trim();
+        String def = entry.substring(0, last).trim();
+        if (name.isEmpty() || def.isEmpty()) {
+            Reporter.ARGUMENT_PARSING.report("empty argument", name + def);
+            return;
+        }
+        if (istypedef) {
+            if (def.endsWith("Ref"))
+                lib.getObject(new CType(name).getProcessedName()).setSuperclass(def.substring(0, def.length() - 3));
+            else
+                CType.registerTypedef(def, name);
+            return;
+        } else {
+            ListOfArguments loa = ListOfArguments.parse(entry.trim());
+            for (String cname : loa.names) {
+                CArgument arg = new CArgument(loa.ptype, cname);
+                arg.addDefinition(original);
+                parent.addCArgument(arg);
+            }
+        }
     }
 
     public CType getType() {

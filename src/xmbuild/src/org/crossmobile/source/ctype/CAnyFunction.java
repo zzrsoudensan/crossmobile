@@ -16,34 +16,13 @@
 
 package org.crossmobile.source.ctype;
 
-import java.util.ArrayList;
-import java.util.List;
+public abstract class CAnyFunction extends CAny {
 
-public abstract class CAnyFunction {
-
-    private List<String> definition = new ArrayList<String>(2);
-    private final String name;
     private final boolean isAbstract;
 
     public CAnyFunction(String name, boolean isAbstract) {
-        this.name = name;
+        super(name, false);
         this.isAbstract = isAbstract;
-    }
-
-    public void addDefinition(String definition) {
-        this.definition.add(definition);
-    }
-
-    public void appendDefinitions(CAnyFunction other) {
-        definition.addAll(other.definition);
-    }
-
-    public Iterable<String> getDefinitions() {
-        return definition;
-    }
-
-    public String getName() {
-        return name;
     }
 
     public boolean isAbstract() {

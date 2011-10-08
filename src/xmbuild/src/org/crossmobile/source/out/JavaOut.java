@@ -23,7 +23,6 @@ import java.util.List;
 import org.crossmobile.source.ctype.CArgument;
 import org.crossmobile.source.ctype.CConstructor;
 import org.crossmobile.source.ctype.CEnum;
-import org.crossmobile.source.ctype.CExternal;
 import org.crossmobile.source.ctype.CLibrary;
 import org.crossmobile.source.ctype.CMethod;
 import org.crossmobile.source.ctype.CObject;
@@ -117,10 +116,19 @@ public class JavaOut implements Generator {
         out.append(" {\n");
 
         if (object.hasConstructorEnums()) {
-            out.append("\n\t/*\n\t * Initialization enumerations \n\t */\n");
+            out.append("\n\t/*\n\t * Initialization enumerations\n\t */\n");
             for (CConstructor c : object.getConstructors())
                 if (c.getEnum() != null)
                     parseEnum(c.getEnum(), out);
+        }
+
+        if (object.hasVariables()) {
+            out.append("\n\t/*\n\t * Variables\n\t */\n");
+            for (CArgument var : object.getVariables()) {
+                out.append("\t public ");
+                parseArgument(var, out);
+                out.append(";\n");
+            }
         }
 
         if (object.hasStaticMethods()) {
@@ -203,7 +211,7 @@ public class JavaOut implements Generator {
 
     private void parseArgument(CArgument arg, Writer out) throws IOException {
         parseType(arg.getType(), false, out);
-        out.append(" ").append(arg.getName());
+        out.append(" ").append(arg.name);
     }
 
     private void parseJavadoc(Iterable<String> definitions, Writer out) throws IOException {
@@ -211,6 +219,19 @@ public class JavaOut implements Generator {
         for (String def : definitions)
             out.append("\t * ").append(def).append("\n");
         out.append("\t */\n");
+    }
+
+    private void parseEnum(CEnum enm, Writer out) throws IOException {
+        out.append("\n\tpublic static enum ");
+        out.append(enm.getName()).append(" {\n\t\t");
+        List<String> values = enm.getValues();
+        int size = values.size();
+        for (int i = 0; i < values.size(); i++) {
+            out.append(values.get(i));
+            if (i < size - 1)
+                out.append(", ");
+        }
+        out.append(";\n\t}\n");
     }
 
     private void parseReporter(Reporter reporter, Writer out) throws IOException {
@@ -231,21 +252,5 @@ public class JavaOut implements Generator {
             }
             out.append("</context>\n");
         }
-    }
-
-    private void parseEnum(CEnum enm, Writer out) throws IOException {
-        out.append("\n\tpublic static enum ");
-        out.append(enm.getName()).append(" {\n\t\t");
-        List<String> values = enm.getValues();
-        int size = values.size();
-        for (int i = 0; i < values.size(); i++) {
-            out.append(values.get(i));
-            if (i < size - 1)
-                out.append(", ");
-        }
-        out.append(";\n\t}\n");
-    }
-
-    private void parseExternal(CExternal enm, Writer out) throws IOException {
     }
 }

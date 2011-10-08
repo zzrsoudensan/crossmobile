@@ -19,12 +19,14 @@ package org.crossmobile.source.ctype;
 import java.util.HashMap;
 import java.util.Map;
 import org.crossmobile.source.guru.Advisor;
+import org.crossmobile.source.guru.Oracle;
 import org.crossmobile.source.guru.Reporter;
 import org.crossmobile.source.utils.StringUtils;
 
 public class CType {
 
     private static Map<String, String> typedefs = new HashMap<String, String>();
+    public static final String FUNCPOINT = "Object";
     //
     private final TypeID typeid;
     private final String processed;
@@ -49,10 +51,6 @@ public class CType {
         // Failsafe for unmatched types
         if (name.isEmpty())
             Reporter.ARGUMENT_PARSING.report(null, "empty name");
-
-        // Handle function pointer as type
-        if (isFunctionPointer(name, "parameter"))
-            name = "Object";
 
         // Beautify Ref pointers
         if (name.endsWith("Ref"))
@@ -90,17 +88,6 @@ public class CType {
             name = "long";
         if (name.equals("long double"))
             name = "double";
-
-        while (name.startsWith("_")) {
-            String shorter = name.substring(1);
-            registerTypedef(shorter, name);
-            name = shorter;
-        }
-        if (name.toLowerCase().startsWith("opaque")) {
-            String shorter = name.substring(6);
-            registerTypedef(shorter, name);
-            name = shorter;
-        }
 
         // Replace protocol with Object name
         if (name.endsWith(">"))
@@ -192,42 +179,51 @@ public class CType {
 
     // New type will be equal to nativetype
     public static String registerTypedef(String systemtype, String newtype) {
+        if (systemtype.equals(newtype))
+            return systemtype;
         if ((systemtype.toLowerCase().startsWith("opaque") && !newtype.toLowerCase().startsWith("opaque"))) {
             String swap = systemtype;
             systemtype = newtype;
             newtype = swap;
         }
-        if (!isFinalizing)
-            typedefs.put(newtype, systemtype);
+        typedefs.put(newtype, systemtype);
         return systemtype;
     }
-    private static boolean isFinalizing = false;
 
     public static void finalizeTypedefs() {
-        isFinalizing = true;
-        for (String key : typedefs.keySet()) {
-            CType stype = new CType(typedefs.get(key));
-            String systemname = stype.typeid.name;
+        Advisor.addDefaultTypedefs();
+        for (String newtype_name : typedefs.keySet()) {
+            CType newtype = new CType(newtype_name);
+            String from = newtype.typeid.name;
+
+            String systype_name = typedefs.get(newtype_name);
+            CType stype = new CType(systype_name);
+            String to = stype.typeid.name;
             int addedRef = stype.reference + stype.typeid.reference;
-            TypeID ntypeid = new CType(key).typeid;
-            String toChange = ntypeid.name;
+
+            if (from.equals(to))
+                continue;
+
             for (TypeID t : TypeID.types.values())
-                if (t.name.equals(toChange)) {
-                    t.name = systemname;
+                if (t.name.equals(from)) {
+                    t.name = to;
                     t.reference += addedRef;
                 }
         }
-        isFinalizing = true;
+        // Beautify names
+        for (TypeID id : TypeID.types.values())
+            id.name = Oracle.nameBeautifier(id.name);
     }
 
     public static boolean isFunctionPointer(String name, String context) {
+        String orig = name;
         int from = name.indexOf('^');
         if (from >= 0) {
             Reporter.FUNCTION_POINTER.report(context + " is block", name);
             name = name.substring(from + 1);
             int to = StringUtils.findFirstWord(name);
             if (to > 0)
-                registerTypedef("Object", name.substring(0, to));
+                registerTypedef(FUNCPOINT, name.substring(0, to));
             return true;
         }
 
@@ -235,9 +231,19 @@ public class CType {
         if (from >= 0) {
             name = name.substring(from);
             int to = StringUtils.matchFromStart(name, '(', ')');
+            String def = name.substring(1, to);
             name = name.substring(to + 1).trim();
             if (name.charAt(0) == '(') {
-                Reporter.FUNCTION_POINTER.report(context + " is function pointer", name);
+                if (def.startsWith("void"))
+                    def = def.substring(4).trim();
+                if (def.startsWith(","))
+                    def = def.substring(1).trim();
+                if (def.startsWith("*"))
+                    def = def.substring(1).trim();
+                String defl = def.toLowerCase();
+                if (defl.contains("callback") || defl.contains("proc"))
+                    registerTypedef(FUNCPOINT, def);
+                Reporter.FUNCTION_POINTER.report(context + " is function pointer", orig);
                 return true;
             }
         }

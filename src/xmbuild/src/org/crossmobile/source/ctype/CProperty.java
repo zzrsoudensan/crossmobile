@@ -22,6 +22,7 @@ import java.util.StringTokenizer;
 import org.crossmobile.source.guru.Reporter;
 import org.crossmobile.source.utils.StringUtils;
 import org.crossmobile.source.parser.Stream;
+import org.crossmobile.source.utils.ListOfArguments;
 
 public class CProperty extends CAnyFunction {
 
@@ -62,26 +63,10 @@ public class CProperty extends CAnyFunction {
             return;
 
         // Find all names
-        List<String> names = new ArrayList<String>();
         List<String> getterL = new ArrayList<String>();
         List<String> setterL = new ArrayList<String>();
-        defs += ",";
-        boolean hasStar = false;
-        while (defs.endsWith(",")) {
-            defs = defs.substring(0, defs.length() - 1).trim();
-            int lastWord = StringUtils.findLastWord(defs);
-            names.add(defs.substring(lastWord));
-            defs = defs.substring(0, lastWord).trim();
-            if (defs.endsWith("*")) {
-                hasStar = true;
-                defs = defs.substring(0, defs.length() - 1).trim();
-            } else
-                hasStar = false;    // Take care ONLY for the last one - copy type of first object to all others. So we need to keep the star if it is deleted by the last entry
-        }
-
-        // Calculate getters/setters
-        CType ptype = new CType(defs + (hasStar ? "*" : ""));
-        for (String bname : names) {
+        ListOfArguments loa = ListOfArguments.parse(defs);
+        for (String bname : loa.names) {
             String camelName = bname.substring(0, 1).toUpperCase() + bname.substring(1);
             getterL.add("get" + camelName);
             setterL.add("set" + camelName);
@@ -104,8 +89,8 @@ public class CProperty extends CAnyFunction {
 
         // Add properties
         String definition = "@property" + property;
-        for (int i = 0; i < names.size(); i++) {
-            CProperty prop = new CProperty(names.get(i), parent.isProtocol(), ptype, getterL.get(i), writable ? setterL.get(i) : null);
+        for (int i = 0; i < loa.names.size(); i++) {
+            CProperty prop = new CProperty(loa.names.get(i), parent.isProtocol(), loa.ptype, getterL.get(i), writable ? setterL.get(i) : null);
             prop.addDefinition(definition);
             parent.addProperty(prop);
         }

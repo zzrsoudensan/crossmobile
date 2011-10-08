@@ -58,6 +58,6 @@ public class CMethod extends CSelector {
 
     @Override
     public String toString() {
-        return getName();
+        return name;
     }
 }

@@ -42,7 +42,7 @@ public class Advisor extends DefaultHandler {
     private static final Set<String> nativeTypes = new HashSet<String>();
     private static final Set<Tuple> typedefs = new HashSet<Tuple>();
     private static final List<Tuple> removables = new ArrayList<Tuple>();
-    private static final Map<String, String> constantCanonicals = new HashMap<String, String>();
+    private static final Map<String, String> nameChanges = new HashMap<String, String>();
     private static final Map<String, String> methodCanonicals = new HashMap<String, String>();
     private static final Set<String> delegatePatterns = new HashSet<String>();
     //
@@ -107,9 +107,11 @@ public class Advisor extends DefaultHandler {
             if (replaceTo == null)
                 replaceTo = "";
             removables.add(new Tuple(at.getValue("pattern"), replaceTo));
-        } else if (qName.equals("constant"))
-            constantCanonicals.put(at.getValue("prefix"), at.getValue("target"));
-        else if (qName.equals("method"))
+        } else if (qName.equals("namechange")) {
+            String to = at.getValue("to");
+            to = to == null ? "" : to;
+            nameChanges.put(at.getValue("prefix"), to);
+        } else if (qName.equals("method"))
             methodCanonicals.put(at.getValue("signature"), at.getValue("name"));
         else if (qName.equals("delegate"))
             delegatePatterns.add(at.getValue("pattern"));
@@ -158,8 +160,8 @@ public class Advisor extends DefaultHandler {
         return data;
     }
 
-    public static Map<String, String> getConstantCanonicals() {
-        return constantCanonicals;
+    public static Map<String, String> getNameChanges() {
+        return nameChanges;
     }
 
     public static String getMethodCanonical(String signature) {

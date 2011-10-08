@@ -23,16 +23,15 @@ import java.util.Set;
 import org.crossmobile.source.guru.Advisor;
 import org.crossmobile.source.utils.FileUtils;
 import org.crossmobile.source.guru.Reporter;
-import org.crossmobile.source.parser.BlockType;
-import org.crossmobile.source.parser.Stream;
+import org.crossmobile.source.utils.FieldHolder;
 
-public class CLibrary {
+public class CLibrary implements FieldHolder {
 
     private final Map<String, CObject> objects = new HashMap<String, CObject>();
     private final Set<CEnum> enums = new LinkedHashSet<CEnum>();
     private final Set<CStruct> structs = new LinkedHashSet<CStruct>();
     private final Set<CFunction> functions = new LinkedHashSet<CFunction>();
-    private final Set<CExternal> externals = new LinkedHashSet<CExternal>();
+    private final Set<CArgument> externals = new LinkedHashSet<CArgument>();
     private String currentFile;
     private final String packagename;
 
@@ -46,84 +45,29 @@ public class CLibrary {
             return;
         this.currentFile = filename;
         Reporter.setFile(filename);
-        data = Advisor.convertData(data);
-
-        CObject lastObject = null;
-
-        Stream s = new Stream(data);
-        s.consumeSpaces();
-        BlockType type;
-        boolean istypedef;
-        boolean isRequired;
-        boolean isProtocol;
-        while ((type = s.peekBlockType()) != BlockType.EOF) {
-            String z = s.peekBlock();
-            istypedef = false;
-            switch (type) {
-                case OPTIONAL:
-                case REQUIRED:
-                    isRequired = type == BlockType.REQUIRED;
-                    s.consumeBlock();
-                    break;
-                case PROTOCOLSTART:
-                case OBJECTSTART:
-                    isProtocol = type == BlockType.PROTOCOLSTART;
-                    s.consumeBlock();
-                    lastObject = CObject.parse(this, isProtocol, s);
-                    isRequired = isProtocol;    // by default, protocol selectors are required. If it is a class, (not a protocol) it is not required (it has default implementation)
-                    break;
-                case PROPERTY:
-                    if (lastObject == null)
-                        throw new NullPointerException("Enclosing object not found!");
-                    s.consumeBlock();
-                    CProperty.parse(lastObject, s);
-                    break;
-                case SELECTOR:
-                    if (lastObject == null)
-                        throw new NullPointerException("Enclosing object not found!");
-                    CSelector.parse(lastObject, s);
-                    break;
-                case OBJECTEND:
-                    Reporter.setObject(null);
-                    lastObject = null;
-                    s.consumeBlock();
-                    break;
-                case TYPEDEFFUNCTION:
-                    CType.isFunctionPointer(s.consumeBlock(), "typedef");
-                    break;
-                case FUNCTION:
-                    CFunction.create(this, s.consumeBlock());
-                    break;
-                case TYPEDEFENUM:
-                    istypedef = true;
-                case ENUM:
-                    CEnum.create(this, istypedef, s.consumeBlock());
-                    break;
-                case TYPEDEFSTRUCT:
-                    istypedef = true;
-                case STRUCT:
-                    CStruct.create(this, istypedef, s.consumeBlock());
-                    break;
-                case TYPEDEFEXTERNAL:
-                    istypedef = true;
-                case EXTERNAL:
-                    CExternal.create(this, istypedef, s.consumeBlock());
-                    break;
-                default:
-                    Reporter.addUnknownItem(lastObject, s.consumeBlock());
-            }
-        }
-
+        CAny.parse(this, Advisor.convertData(data));
         this.currentFile = null;
     }
 
-    public CObject getObject(String name, boolean isProtocol) {
+    public CObject getObject(String name) {
+        return getObject(name, false, false);
+    }
+
+    public CObject getInterface(String name) {
+        return getObject(name, true, false);
+    }
+
+    public CStruct getStruct(String name) {
+        return (CStruct) getObject(name, false, true);
+    }
+
+    private CObject getObject(String name, boolean isProtocol, boolean isStruct) {
         CObject obj = objects.get(name);
         if (obj != null)
             return obj;
 
         name = new CType(name).getProcessedName();
-        obj = new CObject(this, name, isProtocol);
+        obj = isStruct ? new CStruct(this, name, isProtocol) : new CObject(this, name, isProtocol);
         objects.put(name, obj);
         return obj;
     }
@@ -132,7 +76,7 @@ public class CLibrary {
         return enums;
     }
 
-    public Set<CExternal> getExternals() {
+    public Set<CArgument> getExternals() {
         return externals;
     }
 
@@ -154,24 +98,24 @@ public class CLibrary {
 
     public void finalizeLibrary() {
         Reporter.setFile(null);
-        getObject("CFType", false);
-        getObject("SEL", false);
-        getObject("NSZone", false);
-        getObject("Protocol", false);
-        getObject("NSComparator", false);
-        getObject("IMP", false);
-        getObject("NSURLHandle", false);
-        getObject("NSURLHandleClient", false);
-        getObject("NSHost", false);
-        getObject("NSPortMessage", false);
-        getObject("NSConnection", false);
-        getObject("SCNetworkInterface", false);
-        getObject("CMFormatDescription", false);
+        getObject("CFType");
+        getObject("CFURL");
+        getObject("SEL");
+        getObject("NSZone");
+        getObject("Protocol");
+        getObject("NSComparator");
+        getObject("IMP");
+        getObject("NSURLHandle");
+        getObject("NSURLHandleClient");
+        getObject("NSHost");
+        getObject("NSPortMessage");
+        getObject("NSConnection");
+        getObject("SCNetworkInterface");
+        getObject("CMFormatDescription");
 
-        Advisor.addDefaultTypedefs();
         CType.finalizeTypedefs();
         for (CObject o : objects.values()) {
-            Reporter.setObject(o.getName());
+            Reporter.setObject(o);
             o.finalizeObject();
         }
     }
@@ -184,7 +128,9 @@ public class CLibrary {
         functions.add(cFunction);
     }
 
-    void addCExternal(CExternal cExternal) {
-        externals.add(cExternal);
+    @Override
+    public void addCArgument(CArgument arg) {
+//        System.out.println(cExternal.getName());
+        externals.add(arg);
     }
 }

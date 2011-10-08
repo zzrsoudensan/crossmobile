@@ -49,12 +49,12 @@ public final class Stream {
     }
 
     public char peekChar() {
-        consumeSpacesAndSpecials();
+        consumeSpaces();
         return buffer.charAt(location);
     }
 
     public String peekChars(int howmany) {
-        consumeSpacesAndSpecials();
+        consumeSpaces();
         if (howmany < 0)
             howmany = 0;
         if (howmany + location > size)
@@ -63,7 +63,7 @@ public final class Stream {
     }
 
     public String consumeBalanced(char open, char close) {
-        consumeSpacesAndSpecials();
+        consumeSpaces();
         int newloc = StringUtils.matchBalanced(buffer, location, open, close, 1);
         String res = "";
         if (newloc >= 0) {
@@ -76,7 +76,7 @@ public final class Stream {
     }
 
     public String consumeID() {
-        consumeSpacesAndSpecials();
+        consumeSpaces();
         int from = location;
         char c;
         while (location < size && ((c = buffer.charAt(location)) == '_' || (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9')))
@@ -87,7 +87,7 @@ public final class Stream {
     }
 
     public String consumeChars(int howmany) {
-        consumeSpacesAndSpecials();
+        consumeSpaces();
         if (howmany < 0)
             howmany = 0;
         if (howmany + location > size)
@@ -104,12 +104,6 @@ public final class Stream {
             location++;
     }
 
-    public void consumeSpacesAndSpecials() {
-        char c;
-        while (location < size && ((c = buffer.charAt(location)) == ' ' || c == '\n' || c == '\t' || c == '\r' || c == '\f' || c == ';' || c == '}'))
-            location++;
-    }
-
     private void unsetBlock() {
         nextype = null;
         blockLimit = -1;
@@ -119,7 +113,7 @@ public final class Stream {
         if (nextype != null)
             return;
 
-        consumeSpacesAndSpecials();
+        consumeSpaces();        
         if (location >= size) {
             nextype = BlockType.EOF;
             blockLimit = size;
@@ -147,6 +141,10 @@ public final class Stream {
             nextype = BlockType.PROPERTY;
         else if (buffer.regionMatches(location, "@end", 0, 4))
             nextype = BlockType.OBJECTEND;
+        else if (buffer.regionMatches(location, "{", 0, 1))
+            nextype = BlockType.OPENBRACKET;
+        else if (buffer.regionMatches(location, "}", 0, 1))
+            nextype = BlockType.CLOSEBRACKET;
         else {
             String block = buffer.substring(location, blockLimit).trim();
             if (block.startsWith("const"))

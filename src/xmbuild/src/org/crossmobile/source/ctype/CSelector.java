@@ -111,7 +111,7 @@ public abstract class CSelector extends CAnyFunction {
     }
 
     public final String getSignature(String objectname) {
-        return getSignature(objectname, getName(), arguments);
+        return getSignature(objectname, name, arguments);
     }
 
     private static String getSignature(String parent, String name, List<CArgument> arguments) {
@@ -138,6 +138,8 @@ public abstract class CSelector extends CAnyFunction {
             rtrn = body.substring(1, param);
             body = body.substring(param + 1);
         }
+        if (CType.isFunctionPointer(rtrn, "selector return"))
+            rtrn = CType.FUNCPOINT;
         CType returnType = new CType(rtrn);
 
         List<CArgument> args = new ArrayList<CArgument>();
