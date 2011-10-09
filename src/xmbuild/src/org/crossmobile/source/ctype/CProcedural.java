@@ -21,19 +21,15 @@ import org.crossmobile.source.guru.Oracle;
 
 public class CProcedural {
 
-    private final String name;
+    public final String name;
     private final List<String> allnames;
-    protected String original;
+    public final String definition;
     protected String filename;
 
     public CProcedural(String name, String original, String filename) {
-        this.allnames = Oracle.canonical(name);
-        this.name = name;
-        this.original = original;
+        this.name = Oracle.nameBeautifier(name);
+        this.allnames = Oracle.canonical(this.name);
+        this.definition = original;
         this.filename = filename;
-    }
-
-    public String getName() {
-        return name;
     }
 }

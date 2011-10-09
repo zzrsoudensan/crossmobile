@@ -113,7 +113,7 @@ public final class Stream {
         if (nextype != null)
             return;
 
-        consumeSpaces();        
+        consumeSpaces();
         if (location >= size) {
             nextype = BlockType.EOF;
             blockLimit = size;
@@ -125,7 +125,7 @@ public final class Stream {
             while (blockLimit < size && ((c = buffer.charAt(blockLimit)) == '@' || (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '_'))
                 blockLimit++;
         else
-            blockLimit = StringUtils.searchForMatchingBlock(buffer, location, ';');   // ;-based 
+            blockLimit = StringUtils.searchForMatchingBlock(buffer, location, ';');
         c = buffer.charAt(location);
         if (c == '-' || c == '+')
             nextype = BlockType.SELECTOR;
@@ -149,11 +149,12 @@ public final class Stream {
             String block = buffer.substring(location, blockLimit).trim();
             if (block.startsWith("const"))
                 block = block.substring(5).trim();
-
             boolean typedef = block.startsWith("typedef");
             if (typedef)
                 block = block.substring(7).trim();
-
+            if (block.startsWith("const"))
+                block = block.substring(5).trim();
+            
             if (block.startsWith("enum"))
                 nextype = typedef ? BlockType.TYPEDEFENUM : BlockType.ENUM;
             else if (block.startsWith("struct"))

@@ -56,19 +56,7 @@ public class ObjCSkeletonCreator extends Task {
         if (!output.isDirectory())
             throw new BuildException("Output directory " + output.getPath() + " should be a directorty.");
 
-        CLibrary library = new CLibrary("org.xmlvm.iphone");
-        for (File frameworks : sdkpath.listFiles()) {
-            if (debug)
-                System.out.println("Parsing " + frameworks.getPath());
-            if (new File(frameworks + File.separator + "Headers").isDirectory())
-                for (File f : new File(frameworks, "Headers").listFiles())
-                    if (f.getPath().toLowerCase().endsWith(".h"))
-                        library.addFile(f.getPath());
-        }
-        if (debug)
-            System.out.println("Finalize");
-        library.finalizeLibrary();
-
+        CLibrary library = CLibrary.construct("org.xmlvm.iphone", sdkpath, debug);
         JavaOut out = new JavaOut(output.getPath());
         out.generate(library);
         out.report();

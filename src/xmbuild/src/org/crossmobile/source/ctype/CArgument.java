@@ -33,7 +33,7 @@ public class CArgument extends CAny {
     CType type; // Should not be final to fix id conflicts & Generics
 
     public CArgument(CType type, String name) {
-        super(name, false);
+        super(name);
         this.type = type;
     }
 
@@ -48,6 +48,11 @@ public class CArgument extends CAny {
     @Override
     public int hashCode() {
         return name.hashCode();
+    }
+
+    @Override
+    public String toString() {
+        return "[" + type.toString() + " " + name + "]";
     }
 
     public static String fromList(List<CArgument> args) {
@@ -96,9 +101,9 @@ public class CArgument extends CAny {
                 int word = StringUtils.findLastWord(token);
                 String arg = token.substring(word);
                 String coretype;
-                if (word == 0) {  // No variable defined
-                    arg = arg.toLowerCase();
+                if (word == 0) {  // whole name
                     coretype = arg;
+                    arg = arg.toLowerCase();
                 } else
                     coretype = token.substring(0, word);
                 String type = coretype + "*****".substring(0, pointers > 5 ? 5 : pointers) + (isVarargs && block.isEmpty() ? "..." : "");
@@ -146,19 +151,19 @@ public class CArgument extends CAny {
         return new ArgumentResult(new CArgument(new CType(argtype), argname), namedarg);
     }
 
-    public static void create(CLibrary lib, FieldHolder parent, boolean istypedef, String entry) {
-        String original = entry;
-        entry = entry.trim();
-        if (entry.contains("typedef"))
-            entry = entry.replaceAll("typedef", "").replaceAll("  ", " ").trim();
-        if (entry.charAt(entry.length() - 1) == ';')
-            entry = entry.substring(0, entry.length() - 1).trim();
-        if (entry.length() == 0)
+    public static void create(CLibrary lib, FieldHolder parent, boolean istypedef, String block) {
+        String original = block;
+        block = block.trim();
+        if (block.contains("typedef"))
+            block = block.replaceAll("typedef", "").replaceAll("  ", " ").trim();
+        if (block.charAt(block.length() - 1) == ';')
+            block = block.substring(0, block.length() - 1).trim();
+        if (block.length() == 0)
             return;
 
-        int last = StringUtils.findLastWord(entry);
-        String name = entry.substring(last).trim();
-        String def = entry.substring(0, last).trim();
+        int last = StringUtils.findLastWord(block);
+        String name = block.substring(last).trim();
+        String def = block.substring(0, last).trim();
         if (name.isEmpty() || def.isEmpty()) {
             Reporter.ARGUMENT_PARSING.report("empty argument", name + def);
             return;
@@ -170,7 +175,7 @@ public class CArgument extends CAny {
                 CType.registerTypedef(def, name);
             return;
         } else {
-            ListOfArguments loa = ListOfArguments.parse(entry.trim());
+            ListOfArguments loa = ListOfArguments.parse(block.trim());
             for (String cname : loa.names) {
                 CArgument arg = new CArgument(loa.ptype, cname);
                 arg.addDefinition(original);

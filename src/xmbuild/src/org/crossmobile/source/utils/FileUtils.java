@@ -19,8 +19,10 @@ package org.crossmobile.source.utils;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
@@ -29,11 +31,11 @@ public final class FileUtils {
 
     private final static String NL = System.getProperty("line.separator");
 
-    public static String getFile(String filename) {
+    public static String getReader(InputStream input) {
         BufferedReader in = null;
         StringBuilder out = new StringBuilder();
         try {
-            in = new BufferedReader(new InputStreamReader(new FileInputStream(filename), "UTF-8"));
+            in = new BufferedReader(new InputStreamReader(input, "UTF-8"));
             String line;
             while ((line = in.readLine()) != null) {
                 out.append(line);
@@ -49,6 +51,15 @@ public final class FileUtils {
                     in.close();
                 } catch (IOException ex) {
                 }
+        }
+    }
+
+    public static String getFile(String filename) {
+        try {
+            return getReader(new FileInputStream(filename));
+        } catch (FileNotFoundException ex) {
+            System.err.println(ex.toString());
+            return null;
         }
     }
 

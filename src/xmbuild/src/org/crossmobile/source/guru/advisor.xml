@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<!-- 
- 
+<!--
   Copyright (c) 2011 by crossmobile.org
 
   CrossMobile is free software; you can redistribute it and/or modify
@@ -31,9 +30,14 @@
         <native type="char"/>
         <native type="Object"/>
     </natives>
-    
+
     <!-- Pre-set typedefs -->
     <typedefs>
+        <typedef java="NSTimeZone" c="CFTimeZoneRef"/>
+        <typedef java="String" c="CFStringRef"/>
+        <typedef java="NSNumber" c="CFNumberRef"/>
+        <typedef java="NSDate" c="CFDateRef"/>
+        <typedef java="Object" c="NSUncaughtExceptionHandler"/>
         <typedef java="String" c="NSString"/>
         <typedef java="List" c="NSArray"/>
         <typedef java="List" c="NSMutableArray"/>
@@ -63,24 +67,59 @@
         <typedef java="int" c="uid_t"/>
         <typedef java="byte[]" c="va_list"/>
         <typedef java="Object" c="dispatch_queue_t"/>
+        <!-- MIDIServices -->
+        <typedef java="int" c="ItemCount"/>
+        <typedef java="int" c="ByteCount"/>
     </typedefs>
-    
+
+    <!-- Pre-set objects -->
+    <objects>
+        <!-- AudioToolBox -->
+        <object name="FILE"/>
+        <object name="AudioObjectID"/>
+        <object name="AudioObjectPropertyAddress"/>
+        <object name="AudioObjectPropertyListenerProc"/>
+        <object name="FS"/>
+        <object name="ComponentDescription"/>
+        <object name="CTFontDescriptor"/>
+        <object name="ATSFont"/>
+        <object name="CGPDFObject"/>
+        <object name="CFType"/>
+        <object name="CFURL"/>
+        <object name="CFAllocator"/>
+        <object name="CFLocale"/>
+        <object name="CFURL"/>
+        <object name="SEL"/>
+        <object name="NSZone"/>
+        <object name="Protocol"/>
+        <object name="NSComparator"/>
+        <object name="IMP"/>
+        <object name="NSURLHandle"/>
+        <object name="NSURLHandleClient"/>
+        <object name="NSHost"/>
+        <object name="NSPortMessage"/>
+        <object name="NSConnection"/>
+        <object name="SCNetworkInterface"/>
+        <object name="CMFormatDescription"/>
+        <object name="MIDIObject"/>
+    </objects>
+
     <!-- Regular expressions to pre-process the source code, to clean up the include files -->
     <replaceables>
+        <replace pattern="(?s)/\*.*?\*/"/>
         <replace pattern="//.*"/>
         <replace pattern="\\n"/>
-        <replace pattern="(?s)/\*.*?\*/"/>
         <replace pattern="@((class)|(protocol))[\w\s,]+?;"/>
         <replace pattern="@package"/>
         <replace pattern="@public"/>
         <replace pattern="@protected"/>
         <replace pattern="@private"/>
         <replace pattern="extern\s*?.C.\s*?\{"/>
-        
+
         <!-- If these are not defined, they will be mistaken for functions -->
-        <replace pattern="__OSX_STREAM_PROPERTIES_DEPRECATED_10_6"/>   
+        <replace pattern="__OSX_STREAM_PROPERTIES_DEPRECATED_10_6"/>
         <replace pattern="CA_DEPRECATED"/>
-        <replace pattern="(?s)__OSX_AVAILABLE.*?\)"/>   
+        <replace pattern="(?s)__OSX_AVAILABLE.*?\)"/>
         <replace pattern="(?s)NS_DEPRECATED.*?\)"/>
         <replace pattern="(?s)CF_AVAILABLE.*?\)"/>
         <replace pattern="(?s)CT_AVAILABLE.*?\)"/>
@@ -97,7 +136,7 @@
         <replace pattern="(?s)SC_SCHEMA_DECLARATION.*?\)\)"/>
         <replace pattern="(?s)SC_SCHEMA_KV.*?\)"/>
         <replace pattern="(?s)CF_FORMAT_.*?\)"/>
-        
+
         <replace pattern="NS_REQUIRES_NIL_TERMINATION"/>
         <replace pattern="SC_SCHEMA_DECLARATION"/>
         <replace pattern="__BEGIN_DECLS"/>
@@ -106,12 +145,12 @@
         <replace pattern="(?s)__attribute__\(\(.*?\)\)\)\)"/>
         <replace pattern="(?s)__attribute__\(\(.*?\)\)\)"/>
         <replace pattern="(?s)__attribute__\(\(.*?\)\)"/>
-        
+
         <replace pattern="AL_APIENTRY\s"/>
         <replace pattern="ALC_APIENTRY\s"/>
         <replace pattern="AL_API\s"/>
         <replace pattern="ALC_API\s"/>
-        
+
         <replace pattern="CORETELEPHONY_EXTERN_CLASS"/>
         <replace pattern="EAGL_EXTERN_CLASS"/>
         <replace pattern="EA_EXTERN_CLASS"/>
@@ -121,7 +160,7 @@
         <replace pattern="MP_EXTERN_CLASS_AVAILABLE"/>
         <replace pattern="SK_EXTERN_CLASS"/>
         <replace pattern="SK_EXTERN_CLASS_AVAILABLE"/>
-        
+
         <replace pattern="CA_EXTERN_C_BEGIN"/>
         <replace pattern="CA_EXTERN_C_END"/>
         <replace pattern="CF_EXTERN_C_END"/>
@@ -130,7 +169,7 @@
         <replace pattern="IMAGEIO_EXTERN_C_END"/>
         <replace pattern="QL_EXTERN_C_BEGIN"/>
         <replace pattern="QL_EXTERN_C_END"/>
-        
+
         <replace pattern="CA_EXTERN"/>
         <replace pattern="CG_EXTERN"/>
         <replace pattern="CF_EXTERN"/>
@@ -154,14 +193,14 @@
         <replace pattern="QL_EXPORT"/>
         <replace pattern="QL_PRIVATE_EXPORT"/>
         <replace pattern="VT_EXPORT"/>
-        
+
         <replace pattern="CG_INLINE"/>
         <replace pattern="CF_INLINE"/>
-        <replace pattern="NS_INLINE"/>        
+        <replace pattern="NS_INLINE"/>
         <replace pattern="UIKIT_STATIC_INLINE"/>
-        
+
         <replace pattern="extern"/>
-        
+
         <replace pattern="(?s)\\[\n\t\f\r]"/>
         <replace pattern="#.*"/>
         <replace pattern="[\n\t\f\r]" with=" "/>
@@ -175,7 +214,7 @@
         <returnid signature="NSObject:accessibilityElementAtIndex:int" object="Object"/>
         <returnid signature="UILocalizedIndexedCollation:currentCollation:" object="UILocalizedIndexedCollation"/>
         <returnid signature="UIPasteboard:valueForPasteboardType:String" object="Object"/>
-        
+
 <!--        <argumentid signature="NSMutableData:NSUInteger1">
             <argumentiditem object="Object1"/>
         </argumentid>
@@ -214,7 +253,7 @@
         <constructor signature="NSMutableData::int" type="Data">
             <citem value="Capacity"/>
             <citem value="Length"/>
-        </constructor>    
+        </constructor>
         <constructor signature="NSString::byte[]" type="CStringNullTerminated">
             <citem value="UTF8"/>
             <citem value="Default"/>
@@ -230,7 +269,7 @@
         <constructor signature="NSSocketPort::intintintNSData" type="Location">
             <citem value="Default"/>
             <citem value="Remote"/>
-        </constructor>    
+        </constructor>
         <constructor signature="NSURL::String" type="URLType">
             <citem value="Any"/>
             <citem value="FileURL"/>
@@ -245,13 +284,13 @@
             <citem value="RGBA"/>
             <citem value="HSBA"/>
         </constructor>
-        
+
         <!-- Ignore these multiple constructors. We NEED to define them to acknowledge -->
-        <constructor signature="NSNumber::byte" type=""/>    
-        <constructor signature="NSNumber::short" type=""/>    
-        <constructor signature="NSNumber::int" type=""/>    
-        <constructor signature="NSNumber::long" type=""/>    
-    
+        <constructor signature="NSNumber::byte" type=""/>
+        <constructor signature="NSNumber::short" type=""/>
+        <constructor signature="NSNumber::int" type=""/>
+        <constructor signature="NSNumber::long" type=""/>
+
         <!-- handle invalid methods here, e.g. [NSObject new]. Give empty string to ignore this method -->
         <!-- Note the +/- in front of the definition, to distinguish between instance & static methods -->
         <method signature="+NSObject:new:" name=""/>
@@ -262,7 +301,7 @@
         <method signature="-NSNull:load:" name="loadBundle"/>
         <method signature="-NSManagedObject:observationInfo:" name="observationInfoAsObject"/>
         <method signature="-NSCondition:wait:" name="waitCondition"/>
-        <method signature="-NSHTTPCookie:version:" name="versionCookie"/>        
+        <method signature="-NSHTTPCookie:version:" name="versionCookie"/>
         <method signature="-NSBundle:load:" name="loadBundle"/>
         <method signature="-UITableView:load:" name="loadBundle"/>
         <method signature="-UITableView:getDelegate:" name="getTableDelegate"/>
@@ -271,8 +310,9 @@
         <method signature="+CATransaction:valueForKey:String" name="valueForKeyInCATransaction"/>
         <method signature="-NSMachPort:delegate:" name="getMatchPortDelegate"/>
         <method signature="-SKProductsRequest:getDelegate:" name="getRequestDelegate"/>
+        <method signature="-CGImageDestination:finalize:" name="finalizeCGImage"/>
     </conflicts>
-    
+
     <!-- Used in procedurals while naming parsing, to eliminate inconsistencies -->
     <namechanges>
         <!-- constant canonicals: use these entries to trim the beginning of a constant with a value more meaninful in Java -->
@@ -283,7 +323,7 @@
         <namechange prefix="_" />
         <namechange prefix="opaque"/>
     </namechanges>
-    
+
     <!-- Used in CObject, to define that an object is a delegate, so that the selector names should be more agressively trimmed -->
     <delegates>
         <delegate pattern=".*Client$"/>

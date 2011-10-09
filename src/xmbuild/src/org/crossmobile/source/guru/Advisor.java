@@ -26,6 +26,7 @@ import java.util.Map;
 import java.util.Set;
 import javax.xml.parsers.SAXParserFactory;
 import org.crossmobile.source.ctype.CEnum;
+import org.crossmobile.source.ctype.CLibrary;
 import org.crossmobile.source.ctype.CType;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
@@ -45,6 +46,7 @@ public class Advisor extends DefaultHandler {
     private static final Map<String, String> nameChanges = new HashMap<String, String>();
     private static final Map<String, String> methodCanonicals = new HashMap<String, String>();
     private static final Set<String> delegatePatterns = new HashSet<String>();
+    private static final Set<String> definedObjects = new HashSet<String>();
     //
     private String argsig;
     private List<String> argids;
@@ -115,6 +117,8 @@ public class Advisor extends DefaultHandler {
             methodCanonicals.put(at.getValue("signature"), at.getValue("name"));
         else if (qName.equals("delegate"))
             delegatePatterns.add(at.getValue("pattern"));
+        else if (qName.equals("object"))
+            definedObjects.add(at.getValue("name"));
     }
 
     @Override
@@ -131,6 +135,11 @@ public class Advisor extends DefaultHandler {
             conname = null;
             conids = null;
         }
+    }
+
+    public static void addDefinedObjects(CLibrary lib) {
+        for (String obj : definedObjects)
+            lib.getObject(obj);
     }
 
     public static CEnum constructorOverload(String signature) {

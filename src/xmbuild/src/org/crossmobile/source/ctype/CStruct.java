@@ -16,15 +16,14 @@
 
 package org.crossmobile.source.ctype;
 
-import org.crossmobile.source.utils.FieldHolder;
+import java.util.HashSet;
+import java.util.Set;
 import org.crossmobile.source.parser.Stream;
 import org.crossmobile.source.utils.StringUtils;
 
-public class CStruct extends CObject implements FieldHolder {
+public class CStruct {
 
-    public CStruct(CLibrary library, String name, boolean isProtocol) {
-        super(library, name, false);
-    }
+    private static Set<String> defStructs = new HashSet<String>();
 
     public static void create(CLibrary parent, boolean isTypedef, String entry, boolean isInternal) {
         entry = entry.trim();
@@ -43,7 +42,7 @@ public class CStruct extends CObject implements FieldHolder {
             if (isTypedef) {
                 int namepos = StringUtils.findLastWord(entry);
                 corename = CType.registerTypedef(entry.substring(0, namepos).trim(), entry.substring(namepos).trim());
-                CStruct cs = parent.getStruct(corename);
+                registerStruct(parent.getObject(corename), false);
             } else if (StringUtils.findFirstWord(entry) == entry.length())
                 return;
             else
@@ -79,25 +78,31 @@ public class CStruct extends CObject implements FieldHolder {
                 entry = entry.substring(0, entry.length() - 1);
             entry = entry.trim();
 
-            CStruct cs = parent.getStruct(corename);
+            CObject cs = parent.getObject(corename);
+            registerStruct(cs, true);
             CAny.parse(parent, new Stream(entry), cs);
         }
     }
 
-    public void foundEnum(CLibrary lib, boolean typedef, String block) {
+    private static void registerStruct(CObject obj, boolean addAsNative) {
+        obj.setQStruct();
+        if (addAsNative)
+            defStructs.add(obj.name);
+    }
+
+    public static void foundEnum(CLibrary lib, CObject strct, boolean typedef, String block) {
         throw new RuntimeException("Not supported yet");
     }
 
-    public void foundStruct(CLibrary lib, boolean typedef, String block) {
+    public static void foundStruct(CLibrary lib, CObject strct, boolean typedef, String block) {
         System.out.println("?? " + block);
     }
 
-    public void foundArg(CLibrary lib, boolean typedef, String block) {
-        CArgument.create(lib, this, typedef, block);
+    public static void foundArg(CLibrary lib, CObject strct, boolean typedef, String block) {
+        CArgument.create(lib, strct, typedef, block);
     }
 
-    @Override
-    public void addCArgument(CArgument arg) {
-        addVariable(arg, false);
+    public static boolean isStruct(String name) {
+        return defStructs.contains(name);
     }
 }

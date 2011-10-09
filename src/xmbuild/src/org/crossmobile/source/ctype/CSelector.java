@@ -24,7 +24,7 @@ import org.crossmobile.source.guru.Reporter;
 import org.crossmobile.source.utils.StringUtils;
 import org.crossmobile.source.parser.Stream;
 
-public abstract class CSelector extends CAnyFunction {
+public abstract class CSelector extends CAnyMethod {
 
     private final List<CArgument> arguments;
     protected final List<String> nameParts;

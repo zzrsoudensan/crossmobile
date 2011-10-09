@@ -24,7 +24,7 @@ import org.crossmobile.source.utils.StringUtils;
 import org.crossmobile.source.parser.Stream;
 import org.crossmobile.source.utils.ListOfArguments;
 
-public class CProperty extends CAnyFunction {
+public class CProperty extends CAnyMethod {
 
     private final CType type;
     private final String getter;

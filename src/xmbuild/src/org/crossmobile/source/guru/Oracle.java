@@ -17,11 +17,21 @@
 package org.crossmobile.source.guru;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
+import org.crossmobile.source.ctype.CArgument;
+import org.crossmobile.source.ctype.CConstructor;
+import org.crossmobile.source.ctype.CFunction;
+import org.crossmobile.source.ctype.CLibrary;
+import org.crossmobile.source.ctype.CMethod;
+import org.crossmobile.source.ctype.CObject;
+import org.crossmobile.source.ctype.CSelector;
 
 public class Oracle {
 
@@ -57,6 +67,55 @@ public class Oracle {
         return res;
     }
 
+    public static void positionObjects(CLibrary lib) {
+        SortedSet<CObject> objects = new TreeSet<CObject>(new Comparator<CObject>() {
+
+            @Override
+            public int compare(CObject o1, CObject o2) {
+                return -o1.name.compareTo(o2.name);
+            }
+        });
+        for (CObject item : lib.getObjects())
+            objects.add(item);
+
+        Set<CFunction> found = new HashSet<CFunction>();
+        Set<CFunction> missing = new HashSet<CFunction>();
+        boolean still_missing;
+        for (CFunction f : lib.getFunctions()) {
+            still_missing = true;
+            for (CObject o : objects)
+                if (f.name.startsWith(o.name)) {
+                    String fname = f.name.substring(o.name.length());
+                    String lfname = fname.toLowerCase();
+                    fname = Character.toLowerCase(fname.charAt(0)) + fname.substring(1);
+                    CSelector s;
+                    if (lfname.equals("make") || fname.equals("create") || fname.equals("new"))
+                        s = new CConstructor(f.getParameters(), canonical(fname));
+                    else {
+                        List<CArgument> args = f.getParameters();
+                        boolean isStatic = true;
+                        if (!args.isEmpty() && Oracle.nameBeautifier(args.get(0).getType().getProcessedName()).equals(o.name)) {
+                            isStatic = false;
+                            args.remove(0);
+                        }
+                        s = new CMethod(fname, false, args, canonical(fname), isStatic, f.getResult());
+                    }
+                    s.addDefinition(f.definition);
+                    o.addSelector(s);
+                    still_missing = false;
+                    found.add(f);
+                    break;
+                }
+            if (still_missing)
+                missing.add(f);
+        }
+        for (CFunction f : missing) {
+            CSelector s = new CMethod(f.name, false, f.getParameters(), canonical(f.name), true, f.getResult());
+            s.addDefinition(f.definition);
+            lib.getObject(f.framework).addSelector(s);
+        }
+    }
+
     public static String nameBeautifier(String name) {
         if (name.isEmpty())
             return name;
@@ -71,6 +130,8 @@ public class Oracle {
         char t = name.charAt(0);
         if (!(t >= 'A' && t <= 'Z') && !Advisor.isNativeType(name))
             Reporter.GROUPING_ERROR.report("unsupported character", orig);
+        if (name.endsWith("Ref"))
+            name = name.substring(0, name.length() - 3);
         if (name.isEmpty())
             throw new NullPointerException("Name is empty (original is " + orig + ")");
         return name;

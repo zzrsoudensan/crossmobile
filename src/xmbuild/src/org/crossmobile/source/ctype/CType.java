@@ -35,26 +35,26 @@ public class CType {
 
     public CType(String name) {
         // Remove unused identifiers
-        String original = name;
-        name = name.replaceAll("\\*\\s*const", "").
+        name = name.trim().
+                replaceAll("\\*\\s*const", "").
                 replaceAll("const\\s", "").
                 replaceAll("struct\\s", "").
                 replaceAll("inline\\s", "").
                 replaceAll("extern\\s", "").
-                replaceAll("inout\\s", "").
-                replaceAll("out\\s", "").
-                replaceAll("in\\s", "").
-                replaceAll("oneway\\s", "").
                 replaceAll("typedef\\s", "").
-                replaceAll("__strong\\s", "").trim();
+                replaceAll("__strong", "").trim();
+        if (name.startsWith("out "))
+            name = name.substring(4).trim();
+        if (name.startsWith("in "))
+            name = name.substring(3).trim();
+        if (name.startsWith("inout "))
+            name = name.substring(6).trim();
+        if (name.startsWith("oneway "))
+            name = name.substring(7).trim();
 
         // Failsafe for unmatched types
         if (name.isEmpty())
             Reporter.ARGUMENT_PARSING.report(null, "empty name");
-
-        // Beautify Ref pointers
-        if (name.endsWith("Ref"))
-            name = name.substring(0, name.length() - 3);
 
         /*  Resolve pointers */
         reference = StringUtils.count(name, '*');
@@ -66,6 +66,9 @@ public class CType {
             reference += StringUtils.count(name, '[');
             name = name.substring(0, openBracket) + name.substring(closeBracket + 1, name.length());
         }
+        // WHAT TO DO WITH THIS?
+        if (name.endsWith("&"))
+            name = name.substring(0, name.length() - 1).trim();
 
         varargs = name.contains("...");
         if (varargs)
@@ -103,15 +106,8 @@ public class CType {
                 name = name.substring(0, where);
             }
 
-        if (name.contains(" ")) {
-            Reporter.ARGUMENT_PARSING.report("type \'" + name + "\' contains spaces", original);
-            name = "Object";
-            name = name.replaceAll(" ", "");
-        }
-
-        // Deal with void* pointer
-        if (reference > 0 && name.equals("void"))
-            name = "byte";
+        if (name.contains(" "))
+            throw new RuntimeException("type \'" + name + "\' contains spaces");
 
         // Get type
         typeid = TypeID.get(name);
@@ -120,10 +116,20 @@ public class CType {
 
     @Override
     public String toString() {
+        String name = typeid.name;
         int level = reference + typeid.reference;
-        if (level > 0 && !Advisor.isNativeType(typeid.name))
-            level--;
-        StringBuilder b = new StringBuilder(typeid.name);
+        // Deal with void* pointer
+        if (name.equals("void") && level > 0)
+            name = "byte";
+        if (level > 0 && !Advisor.isNativeType(name)) {
+            if (!CStruct.isStruct(name))
+                level--;
+            if (level > 0) {
+                name = "Reference<" + name + ">";
+                level--;
+            }
+        }
+        StringBuilder b = new StringBuilder(name);
         for (; level > 0; level--)
             b.append("[]");
         if (varargs)
@@ -186,6 +192,8 @@ public class CType {
             systemtype = newtype;
             newtype = swap;
         }
+        if (systemtype.contains(",") || newtype.contains(","))
+            throw new RuntimeException("typedef " + systemtype + " " + newtype + " contains comma");
         typedefs.put(newtype, systemtype);
         return systemtype;
     }
@@ -203,6 +211,8 @@ public class CType {
 
             if (from.equals(to))
                 continue;
+            if (Advisor.isNativeType(from) && !(from.equals("char") && to.equals("byte")))  // Only case that a native typedef is performed, is with C's char instead of byte
+                throw new RuntimeException("Native type override: from " + from + " to " + to);
 
             for (TypeID t : TypeID.types.values())
                 if (t.name.equals(from)) {
@@ -211,38 +221,44 @@ public class CType {
                 }
         }
         // Beautify names
-        for (TypeID id : TypeID.types.values())
+        for (TypeID id : TypeID.types.values()) {
+            if (id.name.endsWith("Ref"))
+                id.reference--;
             id.name = Oracle.nameBeautifier(id.name);
+        }
     }
 
-    public static boolean isFunctionPointer(String name, String context) {
-        String orig = name;
-        int from = name.indexOf('^');
+    public static boolean isFunctionPointer(String block, String context) {
+        String orig = block;
+        int from = block.indexOf('^');
         if (from >= 0) {
-            Reporter.FUNCTION_POINTER.report(context + " is block", name);
-            name = name.substring(from + 1);
-            int to = StringUtils.findFirstWord(name);
+            Reporter.FUNCTION_POINTER.report(context + " is block", block);
+            block = block.substring(from + 1);
+            int to = StringUtils.findFirstWord(block);
             if (to > 0)
-                registerTypedef(FUNCPOINT, name.substring(0, to));
+                registerTypedef(FUNCPOINT, block.substring(0, to));
             return true;
         }
 
-        from = name.indexOf('(');
+        from = block.indexOf('(');
         if (from >= 0) {
-            name = name.substring(from);
-            int to = StringUtils.matchFromStart(name, '(', ')');
-            String def = name.substring(1, to);
-            name = name.substring(to + 1).trim();
-            if (name.charAt(0) == '(') {
+            block = block.substring(from);
+            int to = StringUtils.matchFromStart(block, '(', ')');
+            String def = block.substring(1, to).trim();
+            block = block.substring(to + 1).trim();
+            if (block.charAt(0) == '(') {
+                String odef = def;
                 if (def.startsWith("void"))
                     def = def.substring(4).trim();
                 if (def.startsWith(","))
                     def = def.substring(1).trim();
-                if (def.startsWith("*"))
-                    def = def.substring(1).trim();
-                String defl = def.toLowerCase();
-                if (defl.contains("callback") || defl.contains("proc"))
-                    registerTypedef(FUNCPOINT, def);
+                if (!def.contains(",")) {
+                    if (def.startsWith("*"))
+                        def = def.substring(1).trim();
+                    String defl = def.toLowerCase();
+                    if (defl.contains("callback") || defl.contains("proc") || defl.contains("function") || defl.contains("listener"))
+                        registerTypedef(FUNCPOINT, def);
+                }
                 Reporter.FUNCTION_POINTER.report(context + " is function pointer", orig);
                 return true;
             }

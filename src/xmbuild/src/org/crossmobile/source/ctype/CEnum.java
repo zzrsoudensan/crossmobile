@@ -40,7 +40,7 @@ public class CEnum extends CProcedural {
 
     @Override
     public String toString() {
-        return "[" + getName() + " " + values + "]";
+        return "[" + name + " " + values + "]";
     }
 
     public static void create(CLibrary parent, boolean isTypedef, String entry) {

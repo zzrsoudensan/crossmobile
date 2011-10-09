@@ -16,12 +16,12 @@
 
 package org.crossmobile.source.ctype;
 
-public abstract class CAnyFunction extends CAny {
+public abstract class CAnyMethod extends CAny {
 
     private final boolean isAbstract;
 
-    public CAnyFunction(String name, boolean isAbstract) {
-        super(name, false);
+    public CAnyMethod(String name, boolean isAbstract) {
+        super(name);
         this.isAbstract = isAbstract;
     }
 

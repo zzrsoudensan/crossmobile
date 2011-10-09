@@ -27,8 +27,9 @@ import org.crossmobile.source.guru.Advisor;
 import org.crossmobile.source.guru.Oracle;
 import org.crossmobile.source.guru.Reporter;
 import org.crossmobile.source.parser.Stream;
+import org.crossmobile.source.utils.FieldHolder;
 
-public class CObject extends CAny {
+public class CObject extends CAny implements FieldHolder {
 
     private final CLibrary library;
     private CType superclass = null;
@@ -44,10 +45,10 @@ public class CObject extends CAny {
     private boolean hasInstanceMethods = false;
     private boolean hasProperties = false;
     private List<CArgument> variables = new ArrayList<CArgument>();
-    private List<CStruct> structs = new ArrayList<CStruct>();
+    private boolean isStruct = false;
 
-    public CObject(CLibrary library, String name, boolean isProtocol) {
-        super(name, true);
+    CObject(CLibrary library, String name, boolean isProtocol) {
+        super(name);
         this.library = library;
         this.isProtocol = isProtocol;
         genericsCount = Advisor.genericsSupport(name);
@@ -68,7 +69,7 @@ public class CObject extends CAny {
     public void addSelector(CSelector sel) {
         boolean isConstructor = sel instanceof CConstructor;
 
-        // First check if this is a constructor in an interface               
+        // First check if this is a constructor in an interface
         if (isProtocol && isConstructor) {
             Reporter.CONSTRUCTOR_IN_INTERFACE.report("object " + name, sel.getSignature(name));
             return; // Not valid
@@ -303,10 +304,6 @@ public class CObject extends CAny {
         return obj;
     }
 
-    public Iterable<CStruct> getStructures() {
-        return structs;
-    }
-
     public Iterable<CArgument> getVariables() {
         return variables;
     }
@@ -318,5 +315,19 @@ public class CObject extends CAny {
 
     public boolean hasVariables() {
         return !variables.isEmpty();
+    }
+
+    public boolean isStruct() {
+        return isStruct;
+    }
+
+    public void setQStruct() {
+        this.isStruct = true;
+    }
+
+    @Override
+    public void addCArgument(CArgument arg) {
+        if (!variables.contains(arg))
+            variables.add(arg);
     }
 }

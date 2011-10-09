@@ -18,7 +18,6 @@ package org.crossmobile.source.ctype;
 
 import java.util.ArrayList;
 import java.util.List;
-import org.crossmobile.source.guru.Oracle;
 import org.crossmobile.source.guru.Reporter;
 import org.crossmobile.source.parser.BlockType;
 import org.crossmobile.source.parser.Stream;
@@ -28,8 +27,12 @@ public class CAny {
     public final String name;
     private List<String> definition = new ArrayList<String>(2);
 
-    public CAny(String name, boolean beautifier) {
-        this.name = beautifier ? Oracle.nameBeautifier(name) : name;
+    public CAny(String name) {
+        if (name.equals("final"))
+            name = "finalValue";
+        if (name.equals("interface"))
+            name = "interfaceValue";
+        this.name = name;
     }
 
     public void addDefinition(String definition) {
@@ -48,7 +51,7 @@ public class CAny {
         parse(lib, new Stream(data), null);
     }
 
-    public static void parse(CLibrary lib, Stream s, CStruct str) {
+    public static void parse(CLibrary lib, Stream s, CObject strct) {
         CObject lastObject = null;
         s.consumeSpaces();
         BlockType type;
@@ -62,14 +65,14 @@ public class CAny {
             switch (type) {
                 case OPTIONAL:
                 case REQUIRED:
-                    if (str != null)
+                    if (strct != null)
                         throw new RuntimeException("Illegal context: object inside struct");
                     isRequired = type == BlockType.REQUIRED;
                     s.consumeBlock();
                     break;
                 case PROTOCOLSTART:
                 case OBJECTSTART:
-                    if (str != null)
+                    if (strct != null)
                         throw new RuntimeException("Illegal context: object inside struct");
                     isProtocol = type == BlockType.PROTOCOLSTART;
                     s.consumeBlock();
@@ -77,7 +80,7 @@ public class CAny {
                     isRequired = isProtocol;    // by default, protocol selectors are required. If it is a class, (not a protocol) it is not required (it has default implementation)
                     break;
                 case PROPERTY:
-                    if (str != null)
+                    if (strct != null)
                         throw new RuntimeException("Illegal context: object inside struct");
                     if (lastObject == null)
                         throw new NullPointerException("Enclosing object not found!");
@@ -85,14 +88,14 @@ public class CAny {
                     CProperty.parse(lastObject, s);
                     break;
                 case SELECTOR:
-                    if (str != null)
+                    if (strct != null)
                         throw new RuntimeException("Illegal context: object inside struct");
                     if (lastObject == null)
                         throw new NullPointerException("Enclosing object not found!");
                     CSelector.parse(lastObject, s);
                     break;
                 case OBJECTEND:
-                    if (str != null)
+                    if (strct != null)
                         throw new RuntimeException("Illegal context: object inside struct");
                     Reporter.setObject(null);
                     lastObject = null;
@@ -108,24 +111,24 @@ public class CAny {
                 case TYPEDEFENUM:
                     istypedef = true;
                 case ENUM:
-                    if (str != null)
-                        str.foundEnum(lib, istypedef, s.consumeBlock());
+                    if (strct != null)
+                        CStruct.foundEnum(lib, strct, istypedef, s.consumeBlock());
                     else
                         CEnum.create(lib, istypedef, s.consumeBlock());
                     break;
                 case TYPEDEFSTRUCT:
                     istypedef = true;
                 case STRUCT:
-                    if (str != null)
-                        str.foundStruct(lib, istypedef, s.consumeBlock());
+                    if (strct != null)
+                        CStruct.foundStruct(lib, strct, istypedef, s.consumeBlock());
                     else
                         CStruct.create(lib, istypedef, s.consumeBlock(), false);
                     break;
                 case TYPEDEFEXTERNAL:
                     istypedef = true;
                 case EXTERNAL:
-                    if (str != null)
-                        str.foundArg(lib, istypedef, s.consumeBlock());
+                    if (strct != null)
+                        CStruct.foundArg(lib, strct, istypedef, s.consumeBlock());
                     else
                         CArgument.create(lib, lib, istypedef, s.consumeBlock());
                     break;

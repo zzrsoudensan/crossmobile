@@ -41,7 +41,7 @@ public class CConstructor extends CSelector {
         overloadenum = Advisor.constructorOverload(signature);
         if (overloadenum != null) {
             isOverloaded = true;
-            if (overloadenum.getName().equals(""))  // No name means we simply ignore these constructor enumerations
+            if (overloadenum.name.equals(""))  // No name means we simply ignore these constructor enumerations
                 overloadenum = null;
             else if (overloadenum.resetsArgNames()) {
                 List<CArgument> cargs = getArguments();

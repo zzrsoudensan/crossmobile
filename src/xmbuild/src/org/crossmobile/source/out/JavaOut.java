@@ -57,6 +57,14 @@ public class JavaOut implements Generator {
                 }
             });
         }
+        FileUtils.putFile(new File(out, "src" + File.separator + "Reference.java"), new WriteCallBack<Writer>() {
+
+            @Override
+            public void exec(Writer out) throws IOException {
+                out.append("package ").append(library.getPackagename()).append(";\n\n");
+                out.append(FileUtils.getReader(getClass().getResourceAsStream("/org/crossmobile/source/extra/Reference.txt")));
+            }
+        });
     }
 
     public void report() {
@@ -205,7 +213,7 @@ public class JavaOut implements Generator {
         if (overloadenum != null) {
             if (!args.isEmpty())
                 out.append(", ");
-            out.append(parent.getName()).append(".").append(overloadenum.getName()).append(" ").append(overloadenum.getName().toLowerCase());
+            out.append(parent.getName()).append(".").append(overloadenum.name).append(" ").append(overloadenum.name.toLowerCase());
         }
     }
 
@@ -223,7 +231,7 @@ public class JavaOut implements Generator {
 
     private void parseEnum(CEnum enm, Writer out) throws IOException {
         out.append("\n\tpublic static enum ");
-        out.append(enm.getName()).append(" {\n\t\t");
+        out.append(enm.name).append(" {\n\t\t");
         List<String> values = enm.getValues();
         int size = values.size();
         for (int i = 0; i < values.size(); i++) {

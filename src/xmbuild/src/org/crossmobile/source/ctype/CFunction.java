@@ -22,25 +22,19 @@ import org.crossmobile.source.utils.StringUtils;
 public class CFunction extends CProcedural {
 
     private final CType result;
-    private final List<CArgument> params;
+    private final List<CArgument> args;
+    public final String framework;
 
-    public CFunction(CType result, String name, List<CArgument> params, String original, String filename) {
+    public CFunction(CType result, String name, List<CArgument> params, String original, String filename, String framework) {
         super(name, original, filename);
         this.result = result;
-        this.params = params;
+        this.args = params;
+        this.framework = framework;
     }
 
     @Override
     public String toString() {
-        StringBuilder out = new StringBuilder();
-        out.append("\n\tpublic abstract ").append(result.toString()).append(" ").append(getName()).append("(");
-        if (params.size() > 0) {
-            for (CArgument arg : params)
-                out.append(arg.toString()).append(", ");
-            out.delete(out.length() - 2, out.length());
-        }
-        out.append(");\n");
-        return out.toString();
+        return "[" + name + " (" + result.toString() + ") " + args.toString() + "]";
     }
 
     public static void create(CLibrary parent, String entry) {
@@ -63,6 +57,31 @@ public class CFunction extends CProcedural {
                 prefix.substring(last),
                 CArgument.getFunctionArgments(args),
                 original,
-                parent.getCurrentFile()));
+                parent.getCurrentFile(),
+                parent.getCurrentFrameWork()));
+    }
+
+    public List<CArgument> getParameters() {
+        return args;
+    }
+
+    public CType getResult() {
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null || !(obj instanceof CProcedural))
+            return false;
+        return ((CFunction) obj).signature().equals(signature());
+    }
+
+    @Override
+    public int hashCode() {
+        return name.hashCode();
+    }
+
+    private String signature() {
+        return name + args.toString();
     }
 }
