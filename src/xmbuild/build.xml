@@ -11,7 +11,7 @@
 
 	<target name="skeleton" depends="jar">
 		<taskdef resource="org/crossmobile/ant/antlib.xml" classpath="../../dist/xmbuild.jar" onerror="fail"/>
-		<xmskeleton sdkpath="/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS4.3.sdk/System/Library/Frameworks" output="build/skeleton" debug="true"/>
+		<xmskeleton sdkpath="/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS4.3.sdk/System/Library/Frameworks" output="build/skeleton" debug="true" objectprefix="" constructorprefix="" methodprefix="" packagename="org.xmlvm.ios"/>
 		<mkdir dir="build/skeleton/classes"/>
 		<javac srcdir="build/skeleton/src" destdir="build/skeleton/classes" source="1.6" target="1.6"/>
 	</target>
