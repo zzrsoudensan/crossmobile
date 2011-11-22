@@ -28,6 +28,7 @@ public abstract class CSelector extends CAnyMethod {
 
     private final List<CArgument> arguments;
     protected final List<String> nameParts;
+    private final boolean derivesFromObjC;
 
     public static CSelector create(CObject parent, boolean isStatic, CType returnType, List<String> methodParts, List<CArgument> args) {
         String methodName = methodParts.get(0);
@@ -40,10 +41,10 @@ public abstract class CSelector extends CAnyMethod {
         returnType = fixGenericsConflict(returnType, args, signature);
         fixArgumentsIDConflict(parent, args, signature);
         if (constructor)
-            return new CConstructor(args, methodParts);
+            return new CConstructor(true, args, methodParts);
         else {
             returnType = fixReturnIDConflict(parent, isStatic, returnType, methodName, signature);
-            return new CMethod(methodName, parent.isProtocol(), args, methodParts, isStatic, returnType);
+            return new CMethod(methodName, parent.isProtocol(), true, args, methodParts, isStatic, returnType);
         }
     }
 
@@ -104,10 +105,11 @@ public abstract class CSelector extends CAnyMethod {
                 }
     }
 
-    public CSelector(String name, boolean isAbstract, List<CArgument> arguments, List<String> nameParts) {
+    public CSelector(String name, boolean isAbstract, boolean derivesFromObjC, List<CArgument> arguments, List<String> nameParts) {
         super(name, isAbstract);
         this.arguments = arguments;
         this.nameParts = nameParts;
+        this.derivesFromObjC = derivesFromObjC;
     }
 
     public final String getSignature(String objectname) {
@@ -161,6 +163,10 @@ public abstract class CSelector extends CAnyMethod {
         CSelector sel = CSelector.create(parent, isStatic, returnType, methodParts, args);
         sel.addDefinition(fullText);
         parent.addSelector(sel);
+    }
+
+    public boolean derivesFromObjC() {
+        return derivesFromObjC;
     }
 
     public static class ArgumentResult {

@@ -95,7 +95,7 @@ public class CObject extends CAny implements FieldHolder {
 
         names = new ArrayList<String>();
         names.add(pro.getGetterName());
-        m = new CMethod(pro.getGetterName(), pro.isAbstract(), new ArrayList<CArgument>(), names, false, pro.getType());
+        m = new CMethod(pro.getGetterName(), pro.isAbstract(), true, new ArrayList<CArgument>(), names, false, pro.getType());
         for (String def : pro.getDefinitions())
             m.addDefinition(def);
         m.setProperty();
@@ -107,7 +107,7 @@ public class CObject extends CAny implements FieldHolder {
             names = new ArrayList<String>();
             names.add(pro.getSetterName());
 
-            m = new CMethod(pro.getSetterName(), pro.isAbstract(), setargs, names, false, new CType("void"));
+            m = new CMethod(pro.getSetterName(), pro.isAbstract(), true, setargs, names, false, new CType("void"));
             m.setProperty();
             for (String def : pro.getDefinitions())
                 m.addDefinition(def);

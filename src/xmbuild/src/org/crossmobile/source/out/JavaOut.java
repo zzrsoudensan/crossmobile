@@ -37,9 +37,9 @@ public class JavaOut implements Generator {
     protected final static String DUMMYBODY = "{\n\t\tthrow new RuntimeException(\"Stub\");\n\t}\n";
     protected final static String ABSTRACTBODY = ";\n";
     private final String outdir;
-    private String objectprefix;
-    private String methodprefix;
-    private String constructorprefix;
+    private String objectprefix = "";
+    private String methodprefix = "";
+    private String constructorprefix = "";
 
     public JavaOut(String outdir) {
         this.outdir = outdir;

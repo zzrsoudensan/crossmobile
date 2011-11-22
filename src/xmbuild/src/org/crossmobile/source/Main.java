@@ -24,8 +24,8 @@ public class Main {
 
     private static boolean printProgress = false;
     //
-    private static final String inputpath = "/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS4.3.sdk/System/Library/Frameworks";
-    //private static final String inputpath = System.getProperty("user.home") + File.separator + "/Works/Development/Mobile/SDK/CrossMobile/Frameworks";
+    //private static final String inputpath = "/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS4.3.sdk/System/Library/Frameworks";
+    private static final String inputpath = System.getProperty("user.home") + File.separator + "/Works/Development/Mobile/SDK/CrossMobile/Frameworks";
     private static final String outputpath = System.getProperty("user.home") + File.separator + "output";
 
     public static void main(String[] args) {

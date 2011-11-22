@@ -9,7 +9,7 @@
 		<copy file="dist/xmbuild.jar" todir="${user.home}/.mobiledev/lib"/>
 	</target>
 
-	<target name="everything" depends="-xmlvm-jar,install">
+	<target name="update" depends="-xmlvm-jar,install">
 		<copy file="dist/xmlvm.jar" todir="${user.home}/.mobiledev/lib"/>
 	</target>
 
@@ -60,8 +60,15 @@
 		</exec>
 	</target>
 
+	<!-- svn update xmlvm repository -->
+	<target name ="-xmlvm-update" depends="-init">
+		<exec executable="svn" failonerror="true" dir="xmlvm">
+			<arg value="update"/>
+		</exec>
+	</target>
+
 	<!-- Compile xmlvm.jar -->
-	<target name="-xmlvm-jar" depends="-init,-xmlvm-repository" unless="xmlvm.jar.available">
+	<target name="-xmlvm-jar" depends="-init,-xmlvm-repository,-xmlvm-update" unless="xmlvm.jar.available">
 		<ant dir="xmlvm" target="jar"/>
 		<move file="xmlvm/dist/xmlvm.jar" tofile="dist/xmlvm.jar"/>
 	</target>
